@@ -16,7 +16,8 @@
 - Без эффектов, без автоматизации — чистый звук
 
 Полный список задуманных возможностей и порядок разработки — в
-[`docs/backlog.md`](docs/backlog.md).
+[`docs/backlog.md`](docs/backlog.md). Раскладка Akai MPK mini (клавиши, пэды,
+крутилки, джойстик) — в [`docs/mpk-mapping.md`](docs/mpk-mapping.md).
 
 ## Железо
 
