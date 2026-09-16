@@ -1,4 +1,4 @@
 [wokwi]
 version = 1
-firmware = "firmware.ino"
-elf = ""
+firmware = "build/esp32.esp32.esp32s3/firmware.ino.merged.bin"
+elf = "build/esp32.esp32.esp32s3/firmware.ino.elf"

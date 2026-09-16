@@ -13,6 +13,7 @@ firmware/*.map
 
 # Wokwi CLI
 wokwi-cli.log
+firmware/serial*.log
 .wokwi/
 
 # Node (wokwi-cli install)
