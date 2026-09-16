@@ -28,3 +28,6 @@ package-lock.json
 # OS artifacts
 .DS_Store
 Thumbs.db
+
+# Git Credential Manager diagnostics
+gcm-diagnose.log
