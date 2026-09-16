@@ -1,0 +1,29 @@
+# sound-engine build artifacts
+sound-engine/sound-engine
+sound-engine/*.o
+sound-engine/*.exe
+sound-engine/*.pdb
+sound-engine/*.wav
+
+# Arduino / arduino-cli build output
+firmware/build/
+firmware/*.bin
+firmware/*.elf
+firmware/*.map
+
+# Wokwi CLI
+wokwi-cli.log
+.wokwi/
+
+# Node (wokwi-cli install)
+node_modules/
+package-lock.json
+
+# IDE / editor artifacts
+.vscode/
+.idea/
+*.swp
+
+# OS artifacts
+.DS_Store
+Thumbs.db
