@@ -20,6 +20,10 @@ firmware/serial*.log
 node_modules/
 package-lock.json
 
+# Python dev-инструменты (tools/)
+__pycache__/
+*.pyc
+
 # IDE / editor artifacts
 .vscode/
 .idea/

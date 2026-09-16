@@ -16,7 +16,8 @@
 
 const unsigned long BEAT_INTERVAL_MS = 1000;
 const unsigned long POWER_HOLD_MS = 600;  // защита от случайного нажатия
-const unsigned long BOOT_STEP_MS = 500;
+const unsigned long BOOT_DURATION_MS = 3000;
+const unsigned long BOOT_FRAME_MS = 60;  // ~16 fps перерисовки глитч-анимации
 const uint16_t DEFAULT_BPM = 120;
 const uint8_t DEFAULT_TRACK = 0;
 
@@ -33,7 +34,7 @@ unsigned long powerButtonDownAt = 0;
 bool powerActionTriggered = false;
 
 unsigned long bootStartedAt = 0;
-uint8_t bootStepShown = 255;  // заведомо недостижимое значение — форс первой отрисовки
+unsigned long bootFrameShownAt = 0;
 
 void enterOff() {
   powerState = PowerState::Off;
@@ -44,7 +45,7 @@ void enterOff() {
 void enterBoot() {
   powerState = PowerState::Boot;
   bootStartedAt = millis();
-  bootStepShown = 255;
+  bootFrameShownAt = 0;
   Serial.println("power: boot");
 }
 
@@ -56,17 +57,14 @@ void enterHome() {
 
 void updateBoot() {
   const unsigned long elapsed = millis() - bootStartedAt;
-  const uint8_t step = (uint8_t)(elapsed / BOOT_STEP_MS);
-  if (step >= UiScreens::kBootSteps) {
+  if (elapsed >= BOOT_DURATION_MS) {
     enterHome();
     return;
   }
-  if (step != bootStepShown) {
-    bootStepShown = step;
-    Serial.print("dbg:updateBoot calling showBoot step=");
-    Serial.println(step);
-    ui.showBoot(step);
-    Serial.println("dbg:updateBoot showBoot returned");
+  if (millis() - bootFrameShownAt >= BOOT_FRAME_MS) {
+    bootFrameShownAt = millis();
+    const uint8_t percent = (uint8_t)((elapsed * 100) / BOOT_DURATION_MS);
+    ui.showBoot(percent);
   }
 }
 

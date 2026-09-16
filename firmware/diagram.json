@@ -15,6 +15,7 @@
       "id": "lcd1",
       "top": -300,
       "left": 520,
+      "rotate": 90,
       "attrs": {}
     },
     {
@@ -826,31 +827,31 @@
     ],
     [
       "lcd1:CS",
-      "esp:11",
+      "esp:10",
       "purple",
       []
     ],
     [
-      "lcd1:RESET",
-      "esp:12",
+      "lcd1:RST",
+      "esp:18",
       "purple",
       []
     ],
     [
       "lcd1:D/C",
-      "esp:13",
+      "esp:14",
       "purple",
       []
     ],
     [
-      "lcd1:SDI(MOSI)",
-      "esp:14",
+      "lcd1:MOSI",
+      "esp:11",
       "blue",
       []
     ],
     [
       "lcd1:SCK",
-      "esp:18",
+      "esp:12",
       "blue",
       []
     ],
