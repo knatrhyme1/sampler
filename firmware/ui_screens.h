@@ -9,6 +9,17 @@
 
 #include <Adafruit_ILI9341.h>
 
+#include "step_sequencer.h"
+
+// Где стоит курсор главного экрана. PAD5 "нажимает" элемент под курсором.
+enum class HomeFocus : uint8_t { Bpm, Metronome, Sections };
+
+// Пункты меню (B.2) в порядке показа.
+constexpr uint8_t kMenuItemCount = 5;
+constexpr uint8_t kMenuItemExport = 4;
+
+enum class ExportStatus : uint8_t { Ready, Running, Done, Aborted };
+
 class UiScreens {
  public:
   UiScreens();
@@ -19,14 +30,51 @@ class UiScreens {
   // и глитч перерисовываются процедурно на каждый вызов, прогресс-бар и
   // текст "N%" отражают то, что передал вызывающий код.
   void showBoot(uint8_t percent);
-  // bpmFocused — селектор стоит на BPM (рамка), иначе на ряду дорожек.
-  void showHome(uint16_t bpm, uint8_t track, bool bpmFocused);
-  // Список пунктов меню (B.2), selected — индекс подсвеченного пункта (0..3).
+  // Кнопки 1–4 — разделы проекта (навигация внутри проекта), не дорожки.
+  // activeSection — выбранный (нажатый PAD5) раздел, всегда залит.
+  // sectionCursor — раздел под курсором, обводится рамкой, только пока
+  // focus == HomeFocus::Sections.
+  // metronomeOn — настройка "метроном щёлкает при проигрывании", а не факт
+  // щелчков. playing — транспорт проекта (PLAY), показывается в шапке.
+  void showHome(uint16_t bpm, uint8_t activeSection, uint8_t sectionCursor, HomeFocus focus,
+                bool metronomeOn, bool playing);
+  // Перерисовывает только статус транспорта в шапке главного экрана.
+  void updateHomeTransport(bool playing);
+  // Перерисовывает только полосу индикатора уровня сигнала справа (без
+  // fillScreen всего экрана — иначе моргает на каждый кадр). level (0..1) —
+  // реальное значение, посчитанное в firmware.ino по фактическому состоянию
+  // ШИМ-канала метронома, а не декоративная анимация.
+  void updateSoundMeter(float level);
+  // Страница EXPORT: экспорт паттерна в WAV. durationMs/fileBytes — размер
+  // будущего (или отправленного) файла, percent — ход экспорта.
+  void showExport(ExportStatus status, uint8_t percent, uint16_t bpm, uint32_t durationMs,
+                  uint32_t fileBytes, const char* fileName);
+  // Перерисовывает только полосу прогресса и процент.
+  void updateExportProgress(uint8_t percent);
+  // Список пунктов меню (B.2), selected — индекс подсвеченного пункта.
   void showMenuList(uint8_t selected);
   // Заглушка страницы пункта меню — полноэкранная страница (не оверлей,
   // решено в B.2), содержимое конкретных пунктов (TEMPO/TRACK/...) отдельная
   // стори.
   void showMenuItem(uint8_t itemIndex);
+  // Заглушка страницы раздела проекта (section 0..3).
+  void showSectionPage(uint8_t section);
+
+  // Раздел 1 — степ-секвенсор: сетка 4 канала x 16 шагов (2 такта восьмыми).
+  // showSequencer рисует страницу целиком, остальные методы — только
+  // изменившиеся ячейки, чтобы бегущий шаг не моргал всем экраном.
+  void showSequencer(const StepSequencer& seq, uint8_t cursorTrack, uint8_t cursorStep,
+                     uint16_t bpm);
+  void updateSequencerCell(const StepSequencer& seq, uint8_t track, uint8_t step,
+                           uint8_t cursorTrack, uint8_t cursorStep);
+  // Курсор переехал: перерисовать старую и новую ячейку и подписи каналов.
+  void updateSequencerCursor(const StepSequencer& seq, uint8_t oldTrack, uint8_t oldStep,
+                             uint8_t cursorTrack, uint8_t cursorStep);
+  // Бегущий шаг: гасит подсветку прошлого столбца, зажигает текущий
+  // (seq.currentStep()), либо убирает подсветку совсем, если секвенсор стоит.
+  void updateSequencerPlayhead(const StepSequencer& seq, uint8_t cursorTrack,
+                               uint8_t cursorStep);
+  void updateSequencerTransport(bool playing, uint16_t bpm);
 
  private:
   // Аппаратный SPI на "родных" пинах ESP32-S3 (SCK=12/MISO=13/MOSI=11/SS=10
@@ -40,13 +88,22 @@ class UiScreens {
   Adafruit_ILI9341 tft_;
   uint8_t lastFilledSegs_ = 0;
 
+  uint8_t lastMeterFillPx_ = 255;  // 255 = ещё не рисовали, следующий вызов перерисует с нуля
+
   bool bootDrawn_ = false;
   uint8_t lastBootPercent_ = 255;
   uint8_t lastDotPhase_ = 255;
   uint32_t rngState_ = 0x5EED5EED;
   uint32_t bootFrameStart_ = 0;
 
+  uint8_t seqPlayheadStep_ = 255;  // 255 — столбец сейчас не подсвечен
+
   uint8_t nextRand();
+  void drawSequencerCell(const StepSequencer& seq, uint8_t track, uint8_t step,
+                         bool cursor);
+  void drawSequencerLabel(uint8_t track, bool selected);
+  void drawSequencerPlayheadColumn(const StepSequencer& seq, uint8_t step, bool lit,
+                                   uint8_t cursorTrack, uint8_t cursorStep);
   void drawHeader(const char* rightLabel, uint16_t rightColor);
   void drawBootFooter();
   void drawBootLogo();

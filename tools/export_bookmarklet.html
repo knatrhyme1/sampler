@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMPLR Export</title>
+<style>
+  :root {
+    --bg: #f6f3ec;
+    --fg: #1b1a18;
+    --muted: #6b665e;
+    --accent: #e0561b;
+    --card: #ffffff;
+    --border: #ddd6c8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0b0c;
+      --fg: #f5efe1;
+      --muted: #9a948a;
+      --accent: #ff6a2b;
+      --card: #161617;
+      --border: #2c2a27;
+    }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: 0.02em; }
+  .lead { color: var(--muted); margin: 0 0 28px; }
+  .bookmark {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #0b0b0c;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: grab;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 20px 0;
+  }
+  h2 { font-size: 17px; margin: 0 0 8px; }
+  ol { margin: 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  code, kbd {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 0.92em;
+    background: color-mix(in srgb, var(--border) 45%, transparent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .note { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>SMPLR Export</h1>
+  <p class="lead">Закладка, которая забирает WAV-экспорт паттерна из Serial Monitor в Wokwi и сохраняет его файлом.</p>
+
+  <a class="bookmark" id="bookmarklet" href="#">SMPLR Export</a>
+
+  <div class="card">
+    <h2>Установка, один раз</h2>
+    <ol>
+      <li>Покажи панель закладок: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>.</li>
+      <li>Перетащи оранжевую кнопку «SMPLR Export» на панель закладок.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Экспорт</h2>
+    <ol>
+      <li>Открой проект в Wokwi, запусти симуляцию, нарисуй паттерн в разделе 1.</li>
+      <li>Нажми закладку «SMPLR Export» — в правом нижнем углу появится плашка «Жду экспорт».</li>
+      <li>На устройстве с главного экрана: <code>MODE</code> → пункт <code>EXPORT</code> (<code>PAD2</code> вниз, <code>PAD3</code> открыть) → <code>PAD5</code>. Из секвенсора сначала выйди на главный экран (<code>PAD5</code>).</li>
+      <li>Когда полоса дойдёт до конца, браузер скачает <code>smplr-pattern-120bpm.wav</code>.</li>
+    </ol>
+    <p class="note">Файл проверяется по CRC32: если хоть одна строка потерялась, плашка скажет об этом, а файл не скачается. Закладку достаточно нажать один раз за сессию — она ловит все следующие экспорты.</p>
+  </div>
+</main>
+
+<script>
+// Код закладки. Выполняется на странице wokwi.com: читает текст Serial
+// Monitor, собирает строки между EXPORT-BEGIN и EXPORT-END (формат описан в
+// firmware/pattern_export.h), сверяет длину и CRC32 и скачивает WAV.
+function smplrExport() {
+  if (window.__smplrExport) {
+    window.__smplrExport.say("уже слушает Serial Monitor");
+    return;
+  }
+
+  const badge = document.createElement("div");
+  badge.style.cssText =
+    "position:fixed;right:16px;bottom:16px;z-index:2147483647;background:#111;color:#f5efe1;" +
+    "font:13px/1.45 ui-monospace,Consolas,monospace;padding:10px 14px;border:1px solid #ff6a2b;" +
+    "border-radius:8px;max-width:380px;white-space:pre-wrap;box-shadow:0 4px 16px rgba(0,0,0,.4)";
+  document.body.appendChild(badge);
+  const say = (text) => { badge.textContent = "SMPLR Export\n" + text; };
+
+  const crcTable = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    crcTable[i] = c >>> 0;
+  }
+  const crc32 = (bytes) => {
+    let c = 0xffffffff;
+    for (let i = 0; i < bytes.length; i++) c = crcTable[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+    return ((c ^ 0xffffffff) >>> 0).toString(16).padStart(8, "0");
+  };
+
+  const download = (blob, name) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  };
+
+  const finished = new Set();
+  let session = null;
+  let lastResult = "";  // итог прошлого экспорта остаётся на плашке, пока ждём следующий
+  const report = (text) => { lastResult = text; say(text); };
+  const TAIL = 800000;  // сколько последних символов монитора разбирать за тик
+
+  const tick = () => {
+    const pre = document.querySelector('[class*="serial-monitor"] pre');
+    if (!pre) {
+      say("открой Serial Monitor и запусти симуляцию");
+      return;
+    }
+    const all = pre.textContent;
+    // Последняя строка монитора может быть ещё недописанной (например,
+    // "lines=138" вместо "lines=13880") — разбираем только текст до последнего
+    // перевода строки.
+    const cut = all.length > TAIL ? all.slice(-TAIL) : all;
+    const tail = cut.slice(0, cut.lastIndexOf("\n") + 1);
+
+    if (!session) {
+      const begins = [...tail.matchAll(/EXPORT-BEGIN id=([0-9a-f]{8}) file=(\S+) bytes=(\d+) lines=(\d+)/g)];
+      const b = begins.filter((m) => !finished.has(m[1])).pop();
+      if (!b) {
+        say((lastResult ? lastResult + "\n\n" : "") + "жду экспорт: MENU → EXPORT → PAD5");
+        return;
+      }
+      session = { id: b[1], file: b[2], bytes: +b[3], lines: +b[4], parts: new Array(+b[4]), got: 0, endSeenAt: 0 };
+    }
+
+    const s = session;
+    const from = tail.lastIndexOf("EXPORT-BEGIN id=" + s.id);
+    const region = from >= 0 ? tail.slice(from) : tail;
+    // Все строки, кроме последней, несут ровно 57 байт = 76 символов base64;
+    // строка другой длины — обрывок, её ждём целиком на следующем тике.
+    const lastLen = 4 * Math.ceil((s.bytes - 57 * (s.lines - 1)) / 3);
+    for (const m of region.matchAll(/^E:(\d+):([A-Za-z0-9+/=]+)\r?$/gm)) {
+      const idx = +m[1];
+      const expected = idx === s.lines - 1 ? lastLen : 76;
+      if (idx < s.lines && s.parts[idx] === undefined && m[2].length === expected) {
+        s.parts[idx] = m[2];
+        s.got++;
+      }
+    }
+
+    if (region.includes("EXPORT-ABORT id=" + s.id)) {
+      finished.add(s.id);
+      session = null;
+      report("экспорт отменён на устройстве");
+      return;
+    }
+
+    const end = region.match(new RegExp("EXPORT-END id=" + s.id + " crc32=([0-9a-f]{8})"));
+    const pct = Math.floor((s.got * 100) / s.lines);
+    if (!end) {
+      say(`${s.file}\nполучено ${pct}% (${s.got}/${s.lines} строк)`);
+      return;
+    }
+    if (s.got < s.lines) {
+      s.endSeenAt = s.endSeenAt || Date.now();
+      if (Date.now() - s.endSeenAt > 5000) {
+        finished.add(s.id);
+        session = null;
+        report(`ошибка: потеряно ${s.lines - s.got} строк, файл не сохранён.\nЗапусти экспорт ещё раз.`);
+      }
+      return;
+    }
+
+    finished.add(s.id);
+    session = null;
+    const out = new Uint8Array(s.bytes);
+    let pos = 0;
+    try {
+      for (const part of s.parts) {
+        const bin = atob(part);
+        for (let i = 0; i < bin.length && pos < out.length; i++) out[pos++] = bin.charCodeAt(i);
+      }
+    } catch (err) {
+      report(`ошибка: не удалось разобрать данные (${err.message}), файл не сохранён.\nЗапусти экспорт ещё раз.`);
+      return;
+    }
+    const crc = crc32(out);
+    if (pos !== s.bytes || crc !== end[1]) {
+      report(`ошибка: файл повреждён (crc ${crc} вместо ${end[1]}), не сохранён.\nЗапусти экспорт ещё раз.`);
+      return;
+    }
+    // __smplrExportDeliver — точка подмены доставки для автотеста.
+    (window.__smplrExportDeliver || download)(new Blob([out], { type: "audio/wav" }), s.file);
+    report(`готово: ${s.file} (${Math.round(s.bytes / 1024)} КБ) скачан`);
+  };
+
+  window.__smplrExport = { say, stop: () => clearInterval(timer) };
+  const timer = setInterval(tick, 400);
+  tick();
+}
+
+document.getElementById("bookmarklet").href =
+  "javascript:" + encodeURIComponent("(" + smplrExport.toString() + ")()");
+document.getElementById("bookmarklet").addEventListener("click", (e) => {
+  e.preventDefault();
+  alert("Эту кнопку нужно перетащить на панель закладок, а нажимать — на странице Wokwi.");
+});
+</script>
+</body>
+</html>

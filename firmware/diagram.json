@@ -792,6 +792,16 @@
       "attrs": {
         "value": "10000"
       }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 420,
+      "left": -140,
+      "attrs": {
+        "mode": "accurate",
+        "volume": "0.6"
+      }
     }
   ],
   "connections": [
@@ -2071,6 +2081,18 @@
       "btn_power:2.l",
       "esp:GND.1",
       "black",
+      []
+    ],
+    [
+      "bz1:1",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "bz1:2",
+      "esp:21",
+      "red",
       []
     ]
   ],

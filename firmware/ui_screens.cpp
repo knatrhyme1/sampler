@@ -55,6 +55,16 @@ constexpr int16_t kBarSegW = 12;
 constexpr int16_t kBarSegH = 10;
 constexpr int16_t kBarGap = 2;
 constexpr int16_t kFooterY = 214;
+
+// Главный экран (B.2 + метроном): слева BPM/метроном/разделы проекта в колонке
+// шириной kHomeLeftW, справа — вертикальный индикатор уровня сигнала во всю
+// высоту рабочей области экрана.
+constexpr int16_t kHomeLeftW = 220;
+constexpr int16_t kMeterX = 244;
+constexpr int16_t kMeterW = 56;
+constexpr int16_t kMeterY = 54;
+constexpr int16_t kMeterBottom = 214;
+constexpr int16_t kMeterH = kMeterBottom - kMeterY;
 }  // namespace
 
 UiScreens::UiScreens()
@@ -220,36 +230,63 @@ void UiScreens::showBoot(uint8_t percent) {
   }
 }
 
-void UiScreens::showHome(uint16_t bpm, uint8_t track, bool bpmFocused) {
+void UiScreens::showHome(uint16_t bpm, uint8_t activeSection, uint8_t sectionCursor,
+                          HomeFocus focus, bool metronomeOn, bool playing) {
   tft_.fillScreen(kColorBg);
-  drawHeader("READY", kColorGreen);
+  drawHeader("", kColorGreen);
+  updateHomeTransport(playing);
+
+  const bool bpmValueFocused = focus == HomeFocus::Bpm;
+  const bool metronomeFocused = focus == HomeFocus::Metronome;
+  const int16_t bpmX = 28;
 
   char bpmStr[6];
   snprintf(bpmStr, sizeof(bpmStr), "%u", bpm);
   tft_.setTextSize(4);
   tft_.setTextColor(kColorCream);
   const int16_t bpmTextW = (int16_t)strlen(bpmStr) * 24;  // 6px*size4/char
-  tft_.setCursor((kScreenW - bpmTextW) / 2, 58);
+  tft_.setCursor(bpmX, 58);
   tft_.print(bpmStr);
 
-  if (bpmFocused) {
-    const int16_t frameW = max(bpmTextW, (int16_t)48) + 32;
-    tft_.drawRoundRect((kScreenW - frameW) / 2, 51, frameW, 62, 6, kColorOrange);
-    tft_.drawRoundRect((kScreenW - frameW) / 2 + 1, 52, frameW - 2, 60, 5, kColorOrange);
+  if (bpmValueFocused) {
+    const int16_t frameW = max(bpmTextW, (int16_t)48) + 20;
+    tft_.drawRoundRect(bpmX - 10, 51, frameW, 46, 6, kColorOrange);
+    tft_.drawRoundRect(bpmX - 9, 52, frameW - 2, 44, 5, kColorOrange);
   }
 
   tft_.setTextSize(1);
   tft_.setTextColor(kColorOrange);
-  tft_.setCursor(kScreenW / 2 - 12, 100);
+  tft_.setCursor(bpmX, 104);
   tft_.print("BPM");
 
-  const int16_t rowY = 122;
-  const int16_t boxW = 44;
-  const int16_t gap = 8;
-  const int16_t startX = (kScreenW - (4 * boxW + 3 * gap)) / 2;
+  // Кнопка метронома — справа от темпа, в той же строке.
+  const int16_t metX = 152;
+  const int16_t metY = 51;
+  const int16_t metW = 56;
+  const int16_t metH = 46;
+  if (metronomeOn) {
+    tft_.fillRoundRect(metX, metY, metW, metH, 6, kColorGreen);
+    tft_.setTextColor(kColorBg);
+  } else {
+    tft_.drawRoundRect(metX, metY, metW, metH, 6, kColorDim);
+    tft_.setTextColor(kColorDim);
+  }
+  tft_.setTextSize(1);
+  tft_.setCursor(metX + 9, metY + 12);
+  tft_.print("MET");
+  tft_.setCursor(metX + 9, metY + 26);
+  tft_.print(metronomeOn ? "ON" : "OFF");
+  if (metronomeFocused) {
+    tft_.drawRoundRect(metX - 3, metY - 3, metW + 6, metH + 6, 8, kColorOrange);
+  }
+
+  const int16_t rowY = 140;
+  const int16_t boxW = 40;
+  const int16_t gap = 6;
+  const int16_t startX = (kHomeLeftW - (4 * boxW + 3 * gap)) / 2;
   for (uint8_t i = 0; i < 4; i++) {
     const int16_t x = startX + i * (boxW + gap);
-    if (i == track && !bpmFocused) {
+    if (i == activeSection) {
       tft_.fillRoundRect(x, rowY, boxW, 32, 5, kColorOrange);
       tft_.setTextColor(kColorBg);
     } else {
@@ -259,26 +296,77 @@ void UiScreens::showHome(uint16_t bpm, uint8_t track, bool bpmFocused) {
     tft_.setTextSize(2);
     tft_.setCursor(x + boxW / 2 - 6, rowY + 8);
     tft_.print(i + 1);
+    if (focus == HomeFocus::Sections && i == sectionCursor) {
+      tft_.drawRoundRect(x - 3, rowY - 3, boxW + 6, 38, 7, kColorCream);
+    }
   }
 
-  tft_.drawFastHLine(20, 176, kScreenW - 40, kColorDim);
+  tft_.drawFastHLine(20, 176, kHomeLeftW - 20, kColorDim);
   tft_.setTextSize(1);
   tft_.setTextColor(kColorDim);
   tft_.setCursor(20, 188);
-  tft_.print("PLAY-START  PAD1/3-TRACK  MODE-MENU");
+  tft_.print("PAD1/2/3/6-MOVE PAD5-PRESS");
+  tft_.setCursor(20, 198);
+  tft_.print("MODE-MENU");
+
+  // Рамка индикатора уровня сигнала — статичная часть; саму заливку по
+  // кадрам рисует updateSoundMeter(), чтобы не перерисовывать весь экран.
+  tft_.drawRoundRect(kMeterX - 4, kMeterY - 4, kMeterW + 8, kMeterH + 8, 4, kColorDim);
+  tft_.setTextColor(kColorDim);
+  tft_.setCursor(kMeterX, 222);
+  tft_.print("OUT");
+  lastMeterFillPx_ = 255;
+  updateSoundMeter(0.0f);
+}
+
+void UiScreens::updateHomeTransport(bool playing) {
+  const char* label = playing ? "PLAY" : "READY";
+  const int16_t textW = (int16_t)strlen(label) * 6;
+  const int16_t rightX = kScreenW - 20;
+  tft_.fillRect(rightX - 60, 26, 60, 12, kColorBg);
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorGreen);
+  tft_.setCursor(rightX - textW, 30);
+  tft_.print(label);
+  if (playing) {
+    tft_.fillTriangle(rightX - textW - 12, 29, rightX - textW - 12, 37, rightX - textW - 5, 33,
+                      kColorGreen);
+  }
+}
+
+void UiScreens::updateSoundMeter(float level) {
+  if (level < 0.0f) level = 0.0f;
+  if (level > 1.0f) level = 1.0f;
+
+  const uint8_t fillPx = (uint8_t)(level * kMeterH + 0.5f);
+  if (fillPx == lastMeterFillPx_) return;
+
+  // Перерисовываем только изменившуюся часть полосы: сверху фон до уровня
+  // заливки, снизу — сама заливка. Так индикатор не моргает на каждый кадр.
+  tft_.fillRect(kMeterX, kMeterY, kMeterW, kMeterH - fillPx, kColorBg);
+  if (fillPx > 0) {
+    tft_.fillRect(kMeterX, kMeterY + (kMeterH - fillPx), kMeterW, fillPx, kColorOrange);
+  }
+  lastMeterFillPx_ = fillPx;
 }
 
 namespace {
-constexpr const char* kMenuItems[4] = {"TRACK", "TEMPO", "INPUT", "SYSTEM"};
+constexpr const char* kMenuItems[kMenuItemCount] = {"TRACK", "TEMPO", "INPUT", "SYSTEM",
+                                                    "EXPORT"};
+
+constexpr int16_t kExportBarX = 20;
+constexpr int16_t kExportBarY = 150;
+constexpr int16_t kExportBarW = kScreenW - 40;
+constexpr int16_t kExportBarH = 14;
 }  // namespace
 
 void UiScreens::showMenuList(uint8_t selected) {
   tft_.fillScreen(kColorBg);
   drawHeader("MENU", kColorOrange);
 
-  const int16_t rowY0 = 64;
-  const int16_t rowH = 34;
-  for (uint8_t i = 0; i < 4; i++) {
+  const int16_t rowY0 = 58;
+  const int16_t rowH = 30;
+  for (uint8_t i = 0; i < kMenuItemCount; i++) {
     const int16_t y = rowY0 + i * rowH;
     if (i == selected) {
       tft_.fillRoundRect(20, y, kScreenW - 40, rowH - 8, 5, kColorOrange);
@@ -288,7 +376,7 @@ void UiScreens::showMenuList(uint8_t selected) {
       tft_.setTextColor(kColorCream);
     }
     tft_.setTextSize(2);
-    tft_.setCursor(32, y + 7);
+    tft_.setCursor(32, y + 5);
     tft_.print(kMenuItems[i]);
   }
 
@@ -306,10 +394,296 @@ void UiScreens::showMenuItem(uint8_t itemIndex) {
   tft_.setTextSize(1);
   tft_.setTextColor(kColorDim);
   tft_.setCursor(20, 100);
-  tft_.print("(в разработке)");
+  tft_.print("(IN DEVELOPMENT)");
 
   tft_.drawFastHLine(20, 214, kScreenW - 40, kColorDim);
   tft_.setTextColor(kColorDim);
   tft_.setCursor(20, 222);
   tft_.print("BACK PAD1/7");
+}
+
+void UiScreens::showExport(ExportStatus status, uint8_t percent, uint16_t bpm,
+                           uint32_t durationMs, uint32_t fileBytes, const char* fileName) {
+  tft_.fillScreen(kColorBg);
+  drawHeader("EXPORT", kColorOrange);
+
+  tft_.setTextSize(2);
+  tft_.setTextColor(kColorCream);
+  tft_.setCursor(20, 60);
+  tft_.print("PATTERN -> WAV");
+
+  char info[48];
+  snprintf(info, sizeof(info), "2 BARS x2  %u BPM  44.1 KHZ", (unsigned)bpm);
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorDim);
+  tft_.setCursor(20, 90);
+  tft_.print(info);
+  snprintf(info, sizeof(info), "%u.%u SEC  %u KB", (unsigned)(durationMs / 1000),
+           (unsigned)(durationMs % 1000 / 100), (unsigned)((fileBytes + 1023) / 1024));
+  tft_.setCursor(20, 104);
+  tft_.print(info);
+
+  const char* statusText = "";
+  uint16_t statusColor = kColorCream;
+  switch (status) {
+    case ExportStatus::Ready:
+      statusText = "READY";
+      break;
+    case ExportStatus::Running:
+      statusText = "SENDING TO SERIAL...";
+      statusColor = kColorOrange;
+      break;
+    case ExportStatus::Done:
+      statusText = "DONE";
+      statusColor = kColorGreen;
+      break;
+    case ExportStatus::Aborted:
+      statusText = "CANCELLED";
+      statusColor = kColorMagenta;
+      break;
+  }
+  tft_.setTextSize(2);
+  tft_.setTextColor(statusColor);
+  tft_.setCursor(20, 126);
+  tft_.print(statusText);
+
+  tft_.drawRect(kExportBarX - 2, kExportBarY - 2, kExportBarW + 4, kExportBarH + 4, kColorDim);
+  updateExportProgress(status == ExportStatus::Ready ? 0 : percent);
+
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorDim);
+  if (status == ExportStatus::Done) {
+    tft_.setCursor(20, 180);
+    tft_.print(fileName);
+    tft_.setCursor(20, 194);
+    tft_.print("SAVE WITH THE SMPLR EXPORT BOOKMARK");
+  }
+
+  tft_.drawFastHLine(20, 214, kScreenW - 40, kColorDim);
+  tft_.setCursor(20, 222);
+  tft_.print(status == ExportStatus::Running ? "CANCEL PAD7" : "START PAD5  BACK PAD1/7");
+}
+
+void UiScreens::updateExportProgress(uint8_t percent) {
+  if (percent > 100) percent = 100;
+  const int16_t fillW = (int16_t)((int32_t)kExportBarW * percent / 100);
+  tft_.fillRect(kExportBarX, kExportBarY, fillW, kExportBarH, kColorOrange);
+  tft_.fillRect(kExportBarX + fillW, kExportBarY, kExportBarW - fillW, kExportBarH, kColorBg);
+
+  char pct[6];
+  snprintf(pct, sizeof(pct), "%u%%", (unsigned)percent);
+  tft_.fillRect(kScreenW - 20 - 24, 130, 24, 8, kColorBg);
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorCream);
+  tft_.setCursor(kScreenW - 20 - (int16_t)strlen(pct) * 6, 130);
+  tft_.print(pct);
+}
+
+void UiScreens::showSectionPage(uint8_t section) {
+  tft_.fillScreen(kColorBg);
+  char label[12];
+  snprintf(label, sizeof(label), "SECTION %u", (unsigned)(section + 1));
+  drawHeader(label, kColorOrange);
+
+  tft_.setTextSize(2);
+  tft_.setTextColor(kColorCream);
+  tft_.setCursor(20, 70);
+  tft_.print(label);
+
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorDim);
+  tft_.setCursor(20, 100);
+  tft_.print("(IN DEVELOPMENT)");
+
+  tft_.drawFastHLine(20, 214, kScreenW - 40, kColorDim);
+  tft_.setCursor(20, 222);
+  tft_.print("BACK PAD7");
+}
+
+// ---------------------------------------------------------------------------
+// Раздел 1: степ-секвенсор.
+//
+//  y=0   STEP SEQ                         > PLAY  120 BPM
+//  y=40  ─────────────────────────────────────────────────
+//  y=46       1                         2                  номера тактов
+//  y=60       ▀                                            маркер бегущего шага
+//  y=70  KICK □■□□ □□□□ ■□□□ □□□□   □□□□ ...               4 канала x 16 шагов
+//  ...
+//  y=210 ─────────────────────────────────────────────────
+//  y=220 подсказка по управлению
+//
+// Ячейка 12x24 с шагом 16px; между тактами (после 8-го шага) лишние 6px.
+// Курсор — двойная рамка в 2px вокруг ячейки, влезает в зазор между
+// ячейками, поэтому перерисовка одной ячейки не задевает соседние.
+namespace {
+constexpr int16_t kSeqHeaderLineY = 40;
+constexpr int16_t kSeqBarLabelY = 48;
+constexpr int16_t kSeqMarkerY = 60;
+constexpr int16_t kSeqMarkerH = 4;
+constexpr int16_t kSeqGridX = 50;
+constexpr int16_t kSeqGridY = 70;
+constexpr int16_t kSeqCellW = 12;
+constexpr int16_t kSeqCellH = 24;
+constexpr int16_t kSeqStepPitch = 16;
+constexpr int16_t kSeqRowPitch = 34;
+constexpr int16_t kSeqBarGap = 6;
+constexpr int16_t kSeqFooterLineY = 210;
+constexpr int16_t kSeqTransportX = 170;
+
+constexpr const char* kSeqTrackNames[StepSequencer::kTracks] = {"KICK", "SNARE", "HAT",
+                                                                 "PERC"};
+constexpr uint16_t kSeqTrackColors[StepSequencer::kTracks] = {kColorOrange, kColorCyan,
+                                                              kColorLime, kColorMagenta};
+
+int16_t seqStepX(uint8_t step) {
+  return kSeqGridX + step * kSeqStepPitch +
+         (step >= StepSequencer::kStepsPerBar ? kSeqBarGap : 0);
+}
+
+int16_t seqTrackY(uint8_t track) { return kSeqGridY + track * kSeqRowPitch; }
+}  // namespace
+
+void UiScreens::drawSequencerCell(const StepSequencer& seq, uint8_t track, uint8_t step,
+                                  bool cursor) {
+  const int16_t x = seqStepX(step);
+  const int16_t y = seqTrackY(track);
+  const bool on = seq.isOn(track, step);
+  const bool playhead = step == seqPlayheadStep_;
+
+  tft_.fillRect(x - 2, y - 2, kSeqCellW + 4, kSeqCellH + 4, kColorBg);
+  if (on) {
+    // Сработавший шаг под бегущей полосой вспыхивает кремовым.
+    tft_.fillRect(x, y, kSeqCellW, kSeqCellH, playhead ? kColorCream : kSeqTrackColors[track]);
+  } else if (playhead) {
+    tft_.fillRect(x, y, kSeqCellW, kSeqCellH, kColorDim);
+  } else {
+    // Пустые ячейки на долях (каждая вторая восьмая) чуть заметнее — сетка
+    // читается четвертями, как в Channel Rack.
+    if (step % StepSequencer::kStepsPerBeat == 0) {
+      tft_.fillRect(x + 1, y + 1, kSeqCellW - 2, kSeqCellH - 2, kColorGlitchDim);
+    }
+    tft_.drawRect(x, y, kSeqCellW, kSeqCellH, kColorDim);
+  }
+
+  if (cursor) {
+    tft_.drawRect(x - 2, y - 2, kSeqCellW + 4, kSeqCellH + 4, kColorCream);
+    tft_.drawRect(x - 1, y - 1, kSeqCellW + 2, kSeqCellH + 2, kColorCream);
+  }
+}
+
+void UiScreens::drawSequencerLabel(uint8_t track, bool selected) {
+  const int16_t y = seqTrackY(track);
+  tft_.fillRect(16, y, kSeqGridX - 18, kSeqCellH, kColorBg);
+  tft_.setTextSize(1);
+  tft_.setTextColor(selected ? kColorCream : kColorDim);
+  tft_.setCursor(16, y + 8);
+  tft_.print(kSeqTrackNames[track]);
+}
+
+void UiScreens::drawSequencerPlayheadColumn(const StepSequencer& seq, uint8_t step, bool lit,
+                                            uint8_t cursorTrack, uint8_t cursorStep) {
+  const int16_t x = seqStepX(step);
+  tft_.fillRect(x, kSeqMarkerY, kSeqCellW, kSeqMarkerH, lit ? kColorCream : kColorBg);
+  for (uint8_t t = 0; t < StepSequencer::kTracks; t++) {
+    drawSequencerCell(seq, t, step, t == cursorTrack && step == cursorStep);
+    // Точка слева от названия канала горит, пока звучит его шаг.
+    if (lit) {
+      tft_.fillCircle(8, seqTrackY(t) + kSeqCellH / 2, 3,
+                      seq.isOn(t, step) ? kSeqTrackColors[t] : kColorBg);
+    }
+  }
+}
+
+void UiScreens::showSequencer(const StepSequencer& seq, uint8_t cursorTrack, uint8_t cursorStep,
+                              uint16_t bpm) {
+  tft_.fillScreen(kColorBg);
+
+  tft_.setTextSize(2);
+  tft_.setTextColor(kColorCream);
+  tft_.setCursor(12, 14);
+  tft_.print("STEP SEQ");
+  tft_.drawFastHLine(12, kSeqHeaderLineY, kScreenW - 24, kColorDim);
+  updateSequencerTransport(seq.playing(), bpm);
+
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorDim);
+  for (uint8_t bar = 0; bar < StepSequencer::kSteps / StepSequencer::kStepsPerBar; bar++) {
+    tft_.setCursor(seqStepX(bar * StepSequencer::kStepsPerBar) + 3, kSeqBarLabelY);
+    tft_.print(bar + 1);
+  }
+
+  seqPlayheadStep_ = seq.playing() ? seq.currentStep() : 255;
+  for (uint8_t t = 0; t < StepSequencer::kTracks; t++) {
+    drawSequencerLabel(t, t == cursorTrack);
+    for (uint8_t s = 0; s < StepSequencer::kSteps; s++) {
+      drawSequencerCell(seq, t, s, t == cursorTrack && s == cursorStep);
+    }
+  }
+  if (seqPlayheadStep_ != 255) {
+    drawSequencerPlayheadColumn(seq, seqPlayheadStep_, true, cursorTrack, cursorStep);
+  }
+
+  tft_.drawFastHLine(12, kSeqFooterLineY, kScreenW - 24, kColorDim);
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorDim);
+  tft_.setCursor(12, 220);
+  tft_.print("PAD1/2/3/6 MOVE  PAD7 STEP  PLAY  PAD5 EXIT");
+}
+
+void UiScreens::updateSequencerCell(const StepSequencer& seq, uint8_t track, uint8_t step,
+                                    uint8_t cursorTrack, uint8_t cursorStep) {
+  drawSequencerCell(seq, track, step, track == cursorTrack && step == cursorStep);
+}
+
+void UiScreens::updateSequencerCursor(const StepSequencer& seq, uint8_t oldTrack,
+                                      uint8_t oldStep, uint8_t cursorTrack,
+                                      uint8_t cursorStep) {
+  drawSequencerCell(seq, oldTrack, oldStep, false);
+  drawSequencerCell(seq, cursorTrack, cursorStep, true);
+  if (oldTrack != cursorTrack) {
+    drawSequencerLabel(oldTrack, false);
+    drawSequencerLabel(cursorTrack, true);
+  }
+}
+
+void UiScreens::updateSequencerPlayhead(const StepSequencer& seq, uint8_t cursorTrack,
+                                        uint8_t cursorStep) {
+  const uint8_t next = seq.playing() ? seq.currentStep() : 255;
+  if (next == seqPlayheadStep_) return;
+
+  const uint8_t prev = seqPlayheadStep_;
+  seqPlayheadStep_ = next;
+  if (prev != 255) {
+    drawSequencerPlayheadColumn(seq, prev, false, cursorTrack, cursorStep);
+  }
+  if (next != 255) {
+    drawSequencerPlayheadColumn(seq, next, true, cursorTrack, cursorStep);
+  } else {
+    for (uint8_t t = 0; t < StepSequencer::kTracks; t++) {
+      tft_.fillCircle(8, seqTrackY(t) + kSeqCellH / 2, 3, kColorBg);
+    }
+  }
+}
+
+void UiScreens::updateSequencerTransport(bool playing, uint16_t bpm) {
+  tft_.fillRect(kSeqTransportX, 10, kScreenW - 12 - kSeqTransportX, 24, kColorBg);
+
+  const int16_t iconX = kSeqTransportX + 4;
+  const int16_t iconY = 14;
+  if (playing) {
+    tft_.fillTriangle(iconX, iconY, iconX, iconY + 14, iconX + 12, iconY + 7, kColorGreen);
+  } else {
+    tft_.fillRect(iconX, iconY + 1, 12, 12, kColorDim);
+  }
+
+  tft_.setTextSize(1);
+  tft_.setTextColor(playing ? kColorGreen : kColorDim);
+  tft_.setCursor(iconX + 20, iconY + 4);
+  tft_.print(playing ? "PLAY" : "STOP");
+
+  char bpmStr[10];
+  snprintf(bpmStr, sizeof(bpmStr), "%u BPM", bpm);
+  tft_.setTextColor(kColorCream);
+  tft_.setCursor(kScreenW - 12 - (int16_t)strlen(bpmStr) * 6, iconY + 4);
+  tft_.print(bpmStr);
 }
