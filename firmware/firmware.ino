@@ -483,14 +483,21 @@ void loop() {
     // audio=N — сколько сэмплов вывод выдал за секунду; должно быть ~16000,
     // иначе таймер звука работает не на той частоте.
     // edges=N — сколько раз за секунду переключался звуковой пин.
+    // under=N — сколько раз прерывание пришло к пустому кольцевому буферу.
+    // В норме 0; ненулевое значение означает, что задача звука на ядре 0 не
+    // успевает досыпать буфер и в звуке дырки.
     static uint32_t lastSamplesOut = 0;
     static uint32_t lastEdges = 0;
+    static uint32_t lastUnderruns = 0;
     const uint32_t samplesOut = audioOutput.samplesOut();
     const uint32_t edges = audioOutput.edges();
-    Serial.printf("heartbeat audio=%u edges=%u\n", (unsigned)(samplesOut - lastSamplesOut),
-                  (unsigned)(edges - lastEdges));
+    const uint32_t underruns = audioOutput.underruns();
+    Serial.printf("heartbeat audio=%u edges=%u under=%u\n",
+                  (unsigned)(samplesOut - lastSamplesOut), (unsigned)(edges - lastEdges),
+                  (unsigned)(underruns - lastUnderruns));
     lastSamplesOut = samplesOut;
     lastEdges = edges;
+    lastUnderruns = underruns;
   }
 
   // Контроллер опрашивается раз в INPUT_POLL_MS, а не на каждом витке: опрос

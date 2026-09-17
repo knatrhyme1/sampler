@@ -2,8 +2,21 @@
 // путь StepEvent -> Engine -> Voices -> Mix -> Output из
 // docs/poc-backlog-draft.md, E.1). Не знает, куда уходит звук: сэмплы
 // забирает вывод (живой звук — audio_output_1bit.h в Wokwi, на железе —
-// I2S-кодек; экспорт — pattern_export.h), вызывая renderSample() с частотой,
+// I2S-кодек; экспорт — pattern_export.h), вызывая renderBlock() с частотой,
 // заданной в begin().
+//
+// Рендер блочный, а не посэмпловый. Раньше вывод дёргал движок из
+// прерывания таймера на каждый сэмпл: на полезную работу приходилось ~16%
+// затрат, остальное — вход в прерывание, диспетчер gptimer и критическая
+// секция, которая стоила столько же, сколько сам микс
+// (docs/known-issues.md, п. 5). Теперь потребитель просит сразу
+// kMaxBlockSamples сэмплов, и постоянные накладные расходы делятся на
+// размер блока.
+//
+// Важное следствие: renderBlock() вызывается из задачи, а не из
+// прерывания, поэтому ему можно читать сэмплы из флеша (default_samples.h
+// лежит в PROGMEM). Из прерывания это приводило к отказу при любой записи
+// во флеш (docs/known-issues.md, п. 6).
 #pragma once
 
 #include <Arduino.h>
@@ -28,12 +41,20 @@ class AudioEngine {
   static const uint8_t kVoices = 5;
   static constexpr uint32_t kMaxOutputRate = 48000;
 
-  // outputRate — частота, с которой будет вызываться renderSample().
+  // Наибольший блок, который принимает renderBlock(). Ограничение нужно
+  // только под размер накопителя на стеке; потребитель волен просить
+  // меньше.
+  static const uint16_t kMaxBlockSamples = 64;
+
+  // outputRate — частота, с которой будут запрашиваться сэмплы.
   // Ваншоты с другой частотой пересчитываются на лету (линейная
   // интерполяция); при совпадающей частоте сэмплы идут бит в бит.
   void begin(uint32_t outputRate);
 
-  // Вызываются из loop().
+  // Вызываются из управляющего кода (loop() или задача UI), не из рендера.
+  // Запуск голоса не мгновенный: заявка кладётся в почтовый ящик и
+  // разбирается в начале ближайшего блока, то есть квантуется по границе
+  // блока (при 32 сэмплах — 2 мс на 16 кГц, 0,67 мс на 48 кГц).
   void trigger(uint8_t channel, const OneShot& sample);
   void triggerMetronome(bool accent);
   void stopAll();
@@ -41,8 +62,10 @@ class AudioEngine {
   // индикатора OUT.
   uint16_t takePeak();
 
-  // Вызывается из прерывания вывода (или из экспорта), один раз на сэмпл.
-  int16_t renderSample();  // в IRAM — см. определение
+  // Рендерит ровно n сэмплов (1..kMaxBlockSamples) в out. Вызывается из
+  // задачи вывода или из экспорта — в обоих случаях это контекст задачи,
+  // а не прерывания.
+  void renderBlock(int16_t* out, uint16_t n);
 
  private:
   struct Voice {
@@ -55,13 +78,29 @@ class AudioEngine {
     bool active;
   };
 
+  // Заявка на запуск голоса, оставленная trigger() до ближайшего блока.
+  // Повторный trigger() того же канала внутри одного блока затирает
+  // предыдущую заявку — это то же поведение choke, что и раньше.
+  struct PendingTrigger {
+    const int16_t* data;
+    uint32_t length;
+    uint32_t stepQ16;
+    uint16_t gainQ8;
+    bool valid;
+  };
+
   static const uint16_t kMaxClickLength = kMaxOutputRate * 30 / 1000;  // 30 мс
 
-  void startVoice(uint8_t index, const int16_t* data, uint32_t length, uint32_t stepQ16,
-                  uint16_t gainQ8);
+  void postTrigger(uint8_t index, const int16_t* data, uint32_t length, uint32_t stepQ16,
+                   uint16_t gainQ8);
+  // Разбирает почтовый ящик в начале блока; выполняется в контексте
+  // рендера.
+  void applyPending();
 
   uint32_t outputRate_ = kAudioSampleRate;
   Voice voices_[kVoices] = {};
+  PendingTrigger pending_[kVoices] = {};
+  bool stopPending_ = false;
   uint16_t clickLength_ = 0;
   int16_t clickNormal_[kMaxClickLength] = {};
   int16_t clickAccent_[kMaxClickLength] = {};

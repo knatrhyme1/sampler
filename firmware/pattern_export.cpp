@@ -102,7 +102,10 @@ void PatternExporter::start(const StepSequencer& pattern, uint16_t bpm, const On
 void PatternExporter::process() {
   if (state_ != State::Running) return;
 
-  for (uint16_t i = 0; i < kSamplesPerChunk && sampleIndex_ < plan_.totalSamples; i++) {
+  int16_t block[kExportBlockSamples];
+  uint32_t produced = 0;
+
+  while (produced < kSamplesPerChunk && sampleIndex_ < plan_.totalSamples) {
     while (nextStep_ < totalSteps_ && sampleIndex_ >= stepStartSample(nextStep_)) {
       const uint8_t step = nextStep_ % StepSequencer::kSteps;
       for (uint8_t t = 0; t < StepSequencer::kTracks; t++) {
@@ -110,8 +113,21 @@ void PatternExporter::process() {
       }
       nextStep_++;
     }
-    pushSample(engine_.renderSample());
-    sampleIndex_++;
+
+    // Блок обрывается на начале следующего шага: движок применяет заявки
+    // на запуск голосов в начале блока, поэтому удар должен попадать на
+    // первый сэмпл блока, а не на середину. Так офлайн-рендер остаётся
+    // сэмпл в сэмпл тем же, что и при посэмпловом рендере.
+    uint32_t limit = plan_.totalSamples;
+    if (nextStep_ < totalSteps_) limit = min(limit, stepStartSample(nextStep_));
+    uint32_t n = min(limit - sampleIndex_, (uint32_t)kExportBlockSamples);
+    n = min(n, (uint32_t)(kSamplesPerChunk - produced));
+    if (n == 0) break;
+
+    engine_.renderBlock(block, (uint16_t)n);
+    for (uint32_t i = 0; i < n; i++) pushSample(block[i]);
+    sampleIndex_ += n;
+    produced += n;
   }
 
   if (sampleIndex_ >= plan_.totalSamples) finish(true);

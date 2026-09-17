@@ -59,6 +59,9 @@ class PatternExporter {
   static constexpr uint32_t kExportBaud = 2000000;
   static const uint8_t kBytesPerLine = 57;  // -> 76 символов base64
   static const uint16_t kSamplesPerChunk = 1024;
+  // Порция, которой офлайн-рендер дёргает движок. Блок дополнительно
+  // обрывается на границе шага — см. process().
+  static const uint16_t kExportBlockSamples = AudioEngine::kMaxBlockSamples;
 
   uint32_t stepStartSample(uint32_t step) const;
   void pushByte(uint8_t b);
