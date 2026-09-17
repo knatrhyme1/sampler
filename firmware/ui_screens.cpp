@@ -594,8 +594,8 @@ void UiScreens::drawSequencerPlayheadColumn(const StepSequencer& seq, uint8_t st
   }
 }
 
-void UiScreens::showSequencer(const StepSequencer& seq, uint8_t cursorTrack, uint8_t cursorStep,
-                              uint16_t bpm) {
+void UiScreens::showSequencer(const StepSequencer& seq, bool playing, uint8_t playhead,
+                              uint8_t cursorTrack, uint8_t cursorStep, uint16_t bpm) {
   tft_.fillScreen(kColorBg);
 
   tft_.setTextSize(2);
@@ -603,7 +603,7 @@ void UiScreens::showSequencer(const StepSequencer& seq, uint8_t cursorTrack, uin
   tft_.setCursor(12, 14);
   tft_.print("STEP SEQ");
   tft_.drawFastHLine(12, kSeqHeaderLineY, kScreenW - 24, kColorDim);
-  updateSequencerTransport(seq.playing(), bpm);
+  updateSequencerTransport(playing, bpm);
 
   tft_.setTextSize(1);
   tft_.setTextColor(kColorDim);
@@ -612,7 +612,7 @@ void UiScreens::showSequencer(const StepSequencer& seq, uint8_t cursorTrack, uin
     tft_.print(bar + 1);
   }
 
-  seqPlayheadStep_ = seq.playing() ? seq.currentStep() : 255;
+  seqPlayheadStep_ = playing ? playhead : 255;
   for (uint8_t t = 0; t < StepSequencer::kTracks; t++) {
     drawSequencerLabel(t, t == cursorTrack);
     for (uint8_t s = 0; s < StepSequencer::kSteps; s++) {
@@ -646,9 +646,9 @@ void UiScreens::updateSequencerCursor(const StepSequencer& seq, uint8_t oldTrack
   }
 }
 
-void UiScreens::updateSequencerPlayhead(const StepSequencer& seq, uint8_t cursorTrack,
-                                        uint8_t cursorStep) {
-  const uint8_t next = seq.playing() ? seq.currentStep() : 255;
+void UiScreens::updateSequencerPlayhead(const StepSequencer& seq, uint8_t playhead,
+                                        uint8_t cursorTrack, uint8_t cursorStep) {
+  const uint8_t next = playhead;
   if (next == seqPlayheadStep_) return;
 
   const uint8_t prev = seqPlayheadStep_;

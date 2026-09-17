@@ -14,7 +14,7 @@
 // Устройство вывода повторяет схему "DMA + буфер", которая понадобится для
 // I2S, только роль DMA играет прерывание таймера:
 //
-//   задача звука (ядро 0) -> AudioEngine::renderBlock() -> кольцевой буфер
+//   задача звука (ядро 0) -> AudioSource::render() -> кольцевой буфер
 //                                                              |
 //                                    прерывание таймера 16 кГц -+-> GPIO
 //
@@ -27,6 +27,7 @@
 #include <Arduino.h>
 
 #include "audio_engine.h"
+#include "audio_source.h"
 
 class OneBitAudioOutput {
  public:
@@ -39,7 +40,8 @@ class OneBitAudioOutput {
   // прерывание её будит.
   static const uint16_t kBlockSamples = 32;
 
-  void begin(AudioEngine& engine, uint8_t pin);
+  // source — кто считает сэмплы (живой звук: Transport поверх движка).
+  void begin(AudioSource& source, uint8_t pin);
   // Сколько сэмплов выдано с момента begin() — для лога: частота вывода
   // должна быть ~kAudioSampleRate в секунду.
   uint32_t samplesOut() const;

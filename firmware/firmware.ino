@@ -15,6 +15,7 @@
 #include "ui_screens.h"
 #include "control_layout.h"
 #include "step_sequencer.h"
+#include "transport.h"
 #include "audio_engine.h"
 #include "audio_output_1bit.h"
 #include "default_samples.h"
@@ -48,7 +49,7 @@ const uint8_t SEQUENCER_SECTION = 0;
 
 WokwiInputSource inputSource;
 UiScreens ui;
-StepSequencer sequencer;
+Transport transport;
 uint8_t seqCursorTrack = 0;
 uint8_t seqCursorStep = 0;
 AudioEngine audio;
@@ -94,7 +95,7 @@ unsigned long bootFrameShownAt = 0;
 
 void enterOff() {
   exporter.abort();
-  sequencer.stop();
+  transport.stop();
   audio.stopAll();
   soundMeterLevel = 0.0f;
   powerState = PowerState::Off;
@@ -126,7 +127,7 @@ ExportStatus exportStatus() {
 // текущего паттерна; после запуска — размер того, что ушло/уходит.
 void renderExportPage() {
   const PatternExporter::Plan plan = exporter.state() == PatternExporter::State::Idle
-                                         ? PatternExporter::plan(sequencer, currentBpm,
+                                         ? PatternExporter::plan(transport.pattern(), currentBpm,
                                                                  kDefaultOneShots)
                                          : exporter.currentPlan();
   ui.showExport(exportStatus(), exporter.percent(), currentBpm, plan.durationMs, plan.fileBytes,
@@ -137,13 +138,17 @@ void renderUiMode() {
   switch (uiMode) {
     case UiMode::HomeMain:
       ui.showHome(currentBpm, activeSection, sectionCursor, homeFocus, metronomeOn,
-                  sequencer.playing());
+                  transport.playing());
       break;
     case UiMode::SectionPage:
       ui.showSectionPage(activeSection);
       break;
     case UiMode::Sequencer:
-      ui.showSequencer(sequencer, seqCursorTrack, seqCursorStep, currentBpm);
+      {
+        const StepSequencer pattern = transport.pattern();
+        ui.showSequencer(pattern, transport.playing(), transport.playhead(), seqCursorTrack,
+                         seqCursorStep, currentBpm);
+      }
       break;
     case UiMode::MenuList:
       ui.showMenuList(menuSelected);
@@ -184,7 +189,10 @@ void handleModeButton(const InputEvent& ev) {
 // Кнопка MET только решает, будет ли метроном щёлкать вместе с остальным при
 // проигрывании. Если транспорт уже играет, щелчки начнутся/прекратятся со
 // следующей доли.
-void setMetronomeEnabled(bool on) { metronomeOn = on; }
+void setMetronomeEnabled(bool on) {
+  metronomeOn = on;
+  transport.setMetronome(on);
+}
 
 // Нижние клавиши C3..D#3 (B.4) проигрывают ваншот канала 1–4 через ту же
 // мастер-шину — прослушать звук, не запуская паттерн. На странице
@@ -199,7 +207,8 @@ void handleChannelKey(const InputEvent& ev) {
   if (uiMode == UiMode::Sequencer && track != seqCursorTrack) {
     const uint8_t oldTrack = seqCursorTrack;
     seqCursorTrack = track;
-    ui.updateSequencerCursor(sequencer, oldTrack, seqCursorStep, seqCursorTrack, seqCursorStep);
+    const StepSequencer pattern = transport.pattern();
+    ui.updateSequencerCursor(pattern, oldTrack, seqCursorStep, seqCursorTrack, seqCursorStep);
   }
 }
 
@@ -218,11 +227,11 @@ void handleExportNav(NavCommand cmd) {
   }
 
   if (cmd == NavCommand::Confirm) {
-    if (sequencer.playing()) {
-      sequencer.stop();
+    if (transport.playing()) {
+      transport.stop();
       Serial.println("seq: stop (export)");
     }
-    exporter.start(sequencer, currentBpm, kDefaultOneShots, Serial, SERIAL_BAUD);
+    exporter.start(transport.pattern(), currentBpm, kDefaultOneShots, Serial, SERIAL_BAUD);
     renderUiMode();
   } else if (cmd == NavCommand::Back || cmd == NavCommand::Cancel) {
     uiMode = UiMode::MenuList;
@@ -314,14 +323,18 @@ void handleNavCommand(NavCommand cmd) {
         renderUiMode();
         break;
       } else if (cmd == NavCommand::Cancel) {
-        sequencer.toggle(seqCursorTrack, seqCursorStep);
-        ui.updateSequencerCell(sequencer, seqCursorTrack, seqCursorStep, seqCursorTrack,
+        transport.toggleStep(seqCursorTrack, seqCursorStep);
+        const StepSequencer pattern = transport.pattern();
+        ui.updateSequencerCell(pattern, seqCursorTrack, seqCursorStep, seqCursorTrack,
                                seqCursorStep);
         break;
       } else {
         break;
       }
-      ui.updateSequencerCursor(sequencer, oldTrack, oldStep, seqCursorTrack, seqCursorStep);
+      {
+        const StepSequencer pattern = transport.pattern();
+        ui.updateSequencerCursor(pattern, oldTrack, oldStep, seqCursorTrack, seqCursorStep);
+      }
       break;
     }
 
@@ -381,6 +394,7 @@ void handleBpmKnob(const InputEvent& ev) {
   const uint16_t bpm = BPM_MIN + (uint16_t)(((uint32_t)ev.value * (BPM_MAX - BPM_MIN)) / 127);
   if (bpm != currentBpm) {
     currentBpm = bpm;
+    transport.setBpm(bpm);
     renderUiMode();
   }
 }
@@ -412,45 +426,43 @@ void handlePlayStopButton(const InputEvent& ev) {
   if (ev.value == 0) return;
   if (powerState != PowerState::Home) return;
 
-  if (sequencer.playing()) {
-    sequencer.stop();  // уже звучащие удары доигрывают свой хвост
+  if (transport.playing()) {
+    transport.stop();  // уже звучащие удары доигрывают свой хвост
     Serial.println("seq: stop");
   } else {
-    sequencer.start(micros());
+    transport.play();
     Serial.println("seq: play");
   }
   if (uiMode == UiMode::Sequencer) {
-    ui.updateSequencerTransport(sequencer.playing(), currentBpm);
-    ui.updateSequencerPlayhead(sequencer, seqCursorTrack, seqCursorStep);
+    const StepSequencer pattern = transport.pattern();
+    ui.updateSequencerTransport(transport.playing(), currentBpm);
+    ui.updateSequencerPlayhead(pattern, transport.playhead(), seqCursorTrack, seqCursorStep);
   } else if (uiMode == UiMode::HomeMain) {
-    ui.updateHomeTransport(sequencer.playing());
+    ui.updateHomeTransport(transport.playing());
   }
 }
 
-// Часы секвенсора — они же часы метронома, поэтому щелчки всегда ровно на
-// долях паттерна. Сработавшие на шаге каналы запускают свои ваншоты в
-// движке (мастер-шина), дублируются в лог и подсвечиваются на экране.
-void updateSequencer() {
-  if (!sequencer.update(micros(), currentBpm)) return;
-
-  const uint8_t step = sequencer.currentStep();
-  if (metronomeOn && step % StepSequencer::kStepsPerBeat == 0) {
-    audio.triggerMetronome(step % StepSequencer::kStepsPerBar == 0);
-  }
+// Шаг наступает в задаче звука на ядре 0 (transport.h), там же запускаются
+// голоса. Здесь только разбираются уже случившиеся события: строка в лог и
+// бегущий шаг на экране. Если loop() занят перерисовкой, события подождут в
+// очереди — на момент удара это больше не влияет.
+void drainSequencerEvents() {
   static const char* const kTrackLogNames[StepSequencer::kTracks] = {"KICK", "SNARE", "HAT",
                                                                      "PERC"};
-  bool any = false;
-  for (uint8_t t = 0; t < StepSequencer::kTracks; t++) {
-    if (!sequencer.isOn(t, step)) continue;
-    audio.trigger(t, kDefaultOneShots[t]);
-    if (!any) Serial.printf("seq: step %u:", step + 1);
-    Serial.printf(" %s", kTrackLogNames[t]);
-    any = true;
+  uint8_t step = 0;
+  uint8_t mask = 0;
+  while (transport.takeFired(step, mask)) {
+    if (mask == 0) continue;  // шаг пустой — в лог писать нечего
+    Serial.printf("seq: step %u:", step + 1);
+    for (uint8_t t = 0; t < StepSequencer::kTracks; t++) {
+      if (mask & (uint8_t)(1u << t)) Serial.printf(" %s", kTrackLogNames[t]);
+    }
+    Serial.println();
   }
-  if (any) Serial.println();
 
   if (powerState == PowerState::Home && uiMode == UiMode::Sequencer) {
-    ui.updateSequencerPlayhead(sequencer, seqCursorTrack, seqCursorStep);
+    const StepSequencer pattern = transport.pattern();
+    ui.updateSequencerPlayhead(pattern, transport.playhead(), seqCursorTrack, seqCursorStep);
   }
 }
 
@@ -472,7 +484,10 @@ void setup() {
   inputSource.begin();
   ui.begin();
   audio.begin(kAudioSampleRate);
-  audioOutput.begin(audio, AUDIO_PIN);
+  transport.begin(kAudioSampleRate, audio, kDefaultOneShots);
+  transport.setBpm(currentBpm);
+  transport.setMetronome(metronomeOn);
+  audioOutput.begin(transport, AUDIO_PIN);
   enterOff();
 }
 
@@ -547,7 +562,7 @@ void loop() {
     updateBoot();
   }
 
-  updateSequencer();
+  drainSequencerEvents();
   updateExport();
   updateOutputMeter();
   // Отдать процессор простою до следующего тика: часы секвенсора считают

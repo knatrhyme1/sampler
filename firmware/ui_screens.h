@@ -63,17 +63,19 @@ class UiScreens {
   // Раздел 1 — степ-секвенсор: сетка 4 канала x 16 шагов (2 такта восьмыми).
   // showSequencer рисует страницу целиком, остальные методы — только
   // изменившиеся ячейки, чтобы бегущий шаг не моргал всем экраном.
-  void showSequencer(const StepSequencer& seq, uint8_t cursorTrack, uint8_t cursorStep,
-                     uint16_t bpm);
+  // playing/playhead приходят от транспорта: часы живут в задаче звука,
+  // паттерн о времени больше ничего не знает.
+  void showSequencer(const StepSequencer& seq, bool playing, uint8_t playhead,
+                     uint8_t cursorTrack, uint8_t cursorStep, uint16_t bpm);
   void updateSequencerCell(const StepSequencer& seq, uint8_t track, uint8_t step,
                            uint8_t cursorTrack, uint8_t cursorStep);
   // Курсор переехал: перерисовать старую и новую ячейку и подписи каналов.
   void updateSequencerCursor(const StepSequencer& seq, uint8_t oldTrack, uint8_t oldStep,
                              uint8_t cursorTrack, uint8_t cursorStep);
-  // Бегущий шаг: гасит подсветку прошлого столбца, зажигает текущий
-  // (seq.currentStep()), либо убирает подсветку совсем, если секвенсор стоит.
-  void updateSequencerPlayhead(const StepSequencer& seq, uint8_t cursorTrack,
-                               uint8_t cursorStep);
+  // Бегущий шаг: гасит подсветку прошлого столбца и зажигает playhead,
+  // либо убирает подсветку совсем (playhead == 255, транспорт стоит).
+  void updateSequencerPlayhead(const StepSequencer& seq, uint8_t playhead,
+                               uint8_t cursorTrack, uint8_t cursorStep);
   void updateSequencerTransport(bool playing, uint16_t bpm);
 
  private:

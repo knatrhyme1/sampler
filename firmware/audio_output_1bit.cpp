@@ -38,7 +38,7 @@ static_assert((OneBitAudioOutput::kRingSamples & kRingMask) == 0,
 static_assert(OneBitAudioOutput::kBlockSamples <= AudioEngine::kMaxBlockSamples,
               "блок вывода не должен превышать максимальный блок движка");
 
-AudioEngine* gEngine = nullptr;
+AudioSource* gSource = nullptr;
 uint32_t gPinMask = 0;
 hw_timer_t* gTimer = nullptr;
 TaskHandle_t gTask = nullptr;
@@ -63,8 +63,8 @@ uint32_t OneBitAudioOutput::samplesOut() const { return gSamplesOut; }
 uint32_t OneBitAudioOutput::edges() const { return gEdges; }
 uint32_t OneBitAudioOutput::underruns() const { return gUnderruns; }
 
-void OneBitAudioOutput::begin(AudioEngine& engine, uint8_t pin) {
-  gEngine = &engine;
+void OneBitAudioOutput::begin(AudioSource& source, uint8_t pin) {
+  gSource = &source;
   gPinMask = 1UL << pin;  // GPIO0..31 — регистр out_w1ts/out_w1tc
   pinMode(pin, OUTPUT);
   digitalWrite(pin, LOW);
@@ -81,7 +81,7 @@ void OneBitAudioOutput::fillRing() {
   // переменной; перечитывать надо только хвост — его двигает прерывание.
   uint32_t head = gHead;
   while ((uint32_t)(head - gTail) <= (uint32_t)(kRingSamples - kBlockSamples)) {
-    gEngine->renderBlock(block, kBlockSamples);
+    gSource->render(block, kBlockSamples);
     for (uint16_t i = 0; i < kBlockSamples; i++) {
       gRing[(head + i) & kRingMask] = block[i];
     }
