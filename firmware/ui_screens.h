@@ -19,7 +19,14 @@ class UiScreens {
   // и глитч перерисовываются процедурно на каждый вызов, прогресс-бар и
   // текст "N%" отражают то, что передал вызывающий код.
   void showBoot(uint8_t percent);
-  void showHome(uint16_t bpm, uint8_t track);
+  // bpmFocused — селектор стоит на BPM (рамка), иначе на ряду дорожек.
+  void showHome(uint16_t bpm, uint8_t track, bool bpmFocused);
+  // Список пунктов меню (B.2), selected — индекс подсвеченного пункта (0..3).
+  void showMenuList(uint8_t selected);
+  // Заглушка страницы пункта меню — полноэкранная страница (не оверлей,
+  // решено в B.2), содержимое конкретных пунктов (TEMPO/TRACK/...) отдельная
+  // стори.
+  void showMenuItem(uint8_t itemIndex);
 
  private:
   // Аппаратный SPI на "родных" пинах ESP32-S3 (SCK=12/MISO=13/MOSI=11/SS=10

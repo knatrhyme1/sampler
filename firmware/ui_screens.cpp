@@ -220,7 +220,7 @@ void UiScreens::showBoot(uint8_t percent) {
   }
 }
 
-void UiScreens::showHome(uint16_t bpm, uint8_t track) {
+void UiScreens::showHome(uint16_t bpm, uint8_t track, bool bpmFocused) {
   tft_.fillScreen(kColorBg);
   drawHeader("READY", kColorGreen);
 
@@ -231,6 +231,12 @@ void UiScreens::showHome(uint16_t bpm, uint8_t track) {
   const int16_t bpmTextW = (int16_t)strlen(bpmStr) * 24;  // 6px*size4/char
   tft_.setCursor((kScreenW - bpmTextW) / 2, 58);
   tft_.print(bpmStr);
+
+  if (bpmFocused) {
+    const int16_t frameW = max(bpmTextW, (int16_t)48) + 32;
+    tft_.drawRoundRect((kScreenW - frameW) / 2, 51, frameW, 62, 6, kColorOrange);
+    tft_.drawRoundRect((kScreenW - frameW) / 2 + 1, 52, frameW - 2, 60, 5, kColorOrange);
+  }
 
   tft_.setTextSize(1);
   tft_.setTextColor(kColorOrange);
@@ -243,7 +249,7 @@ void UiScreens::showHome(uint16_t bpm, uint8_t track) {
   const int16_t startX = (kScreenW - (4 * boxW + 3 * gap)) / 2;
   for (uint8_t i = 0; i < 4; i++) {
     const int16_t x = startX + i * (boxW + gap);
-    if (i == track) {
+    if (i == track && !bpmFocused) {
       tft_.fillRoundRect(x, rowY, boxW, 32, 5, kColorOrange);
       tft_.setTextColor(kColorBg);
     } else {
@@ -259,5 +265,51 @@ void UiScreens::showHome(uint16_t bpm, uint8_t track) {
   tft_.setTextSize(1);
   tft_.setTextColor(kColorDim);
   tft_.setCursor(20, 188);
-  tft_.print("PLAY-START  MODE-TRACK");
+  tft_.print("PLAY-START  PAD1/3-TRACK  MODE-MENU");
+}
+
+namespace {
+constexpr const char* kMenuItems[4] = {"TRACK", "TEMPO", "INPUT", "SYSTEM"};
+}  // namespace
+
+void UiScreens::showMenuList(uint8_t selected) {
+  tft_.fillScreen(kColorBg);
+  drawHeader("MENU", kColorOrange);
+
+  const int16_t rowY0 = 64;
+  const int16_t rowH = 34;
+  for (uint8_t i = 0; i < 4; i++) {
+    const int16_t y = rowY0 + i * rowH;
+    if (i == selected) {
+      tft_.fillRoundRect(20, y, kScreenW - 40, rowH - 8, 5, kColorOrange);
+      tft_.setTextColor(kColorBg);
+    } else {
+      tft_.drawRoundRect(20, y, kScreenW - 40, rowH - 8, 5, kColorDim);
+      tft_.setTextColor(kColorCream);
+    }
+    tft_.setTextSize(2);
+    tft_.setCursor(32, y + 7);
+    tft_.print(kMenuItems[i]);
+  }
+
+  tft_.drawFastHLine(20, 214, kScreenW - 40, kColorDim);
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorDim);
+  tft_.setCursor(20, 222);
+  tft_.print("UP/DOWN PAD6/2  ENTER PAD3/5  BACK PAD1/7");
+}
+
+void UiScreens::showMenuItem(uint8_t itemIndex) {
+  tft_.fillScreen(kColorBg);
+  drawHeader(kMenuItems[itemIndex], kColorOrange);
+
+  tft_.setTextSize(1);
+  tft_.setTextColor(kColorDim);
+  tft_.setCursor(20, 100);
+  tft_.print("(в разработке)");
+
+  tft_.drawFastHLine(20, 214, kScreenW - 40, kColorDim);
+  tft_.setTextColor(kColorDim);
+  tft_.setCursor(20, 222);
+  tft_.print("BACK PAD1/7");
 }

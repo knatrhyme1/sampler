@@ -40,7 +40,7 @@ uint64_t WokwiInputSource::readShiftRegisters() {
 bool WokwiInputSource::bitToEvent(uint8_t srNum, uint8_t dBit, bool pressed,
                                    InputEvent& ev) {
   if (srNum == 1) {
-    // Пэды 1..8 (D0..D7), ноты банка A из раскладки MPK.
+    // padN подключён к D(N-1) — шлём ту же ноту, что настоящий PADN на MPK.
     ev.type = pressed ? InputEventType::NoteOn : InputEventType::NoteOff;
     ev.channel = MPK_CHANNEL_PADS;
     ev.number = MPK_PAD_NOTES_BANK_A[dBit];

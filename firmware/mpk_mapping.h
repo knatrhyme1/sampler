@@ -17,9 +17,10 @@
 #define MPK_KEY_LOWEST  48  // C3
 #define MPK_KEY_HIGHEST 72  // C5
 
-// Пэды: индекс 0-3 — верхний ряд слева направо, 4-7 — нижний ряд слева направо
-static const uint8_t MPK_PAD_NOTES_BANK_A[8] = {52, 53, 55, 57, 45, 47, 48, 50};
-static const uint8_t MPK_PAD_NOTES_BANK_B[8] = {65, 67, 69, 71, 59, 60, 62, 64};
+// Пэды: индекс = номер пэда на корпусе Akai минус 1. PAD1-4 — нижний ряд слева
+// направо, PAD5-8 — верхний ряд слева направо.
+static const uint8_t MPK_PAD_NOTES_BANK_A[8] = {45, 47, 48, 50, 52, 53, 55, 57};
+static const uint8_t MPK_PAD_NOTES_BANK_B[8] = {59, 60, 62, 64, 65, 67, 69, 71};
 
 // Крутилки K1..K8 -> CC (MPK_KNOB_CC_BASE + индекс 0..7)
 #define MPK_KNOB_CC_BASE 70
