@@ -12,15 +12,14 @@ constexpr uint32_t kTimerTicksPerSample = 51;
 constexpr int16_t kThreshold = 256;
 // Сколько подряд "тихих" сэмплов до того, как пин уходит в ноль (~4 мс).
 constexpr uint16_t kSilenceSamples = kAudioSampleRate / 250;
-// Если пин долго не меняется, пищалка Wokwi перестаёт присылать звук, а
-// после паузы её рендер отстаёт: каждый новый перепад "догоняет" тишину
-// кусками по 100 мс, и удар в 300 мс растягивается в бесконечную
-// пульсацию (проверено записью: тон 40–200 Гц без пауз рендерится точно,
-// удар после тишины — нет). Поэтому раз в ~1 мс пин дёргается туда и
-// обратно внутри одного прерывания: для пищалки это событие, держащее её
-// время актуальным, а в отсчёты 48 кГц импульс короче микросекунды не
-// попадает.
-constexpr uint16_t kKeepAliveSamples = kAudioSampleRate / 1000;
+// Пин меняется только тогда, когда движку есть что играть. Раньше здесь
+// были keep-alive импульсы раз в 1 мс — против отставания рендера пищалки
+// Wokwi после тишины. Но как только рендер отстаёт (старт симуляции,
+// тяжёлая перерисовка экрана, медленная вкладка Firefox), пищалка кладёт
+// каждый перепад в отдельный кусок по 100 мс, и импульс короче
+// микросекунды превращается в 100 мс единицы: выключенное устройство
+// щёлкало и стучало на 5 Гц (docs/known-issues.md, п. 10). Тишина должна
+// быть тишиной, поэтому в тишине пин лежит в нуле и не двигается.
 
 // Задача звука живёт на ядре 0: ядро 1 занято loop() с отрисовкой экрана,
 // а полная перерисовка блокирует его на десятки миллисекунд
@@ -52,7 +51,7 @@ volatile uint32_t gTail = 0;
 bool gHigh = false;
 bool gWasHigh = false;
 uint16_t gQuietCount = 0;
-uint16_t gKeepAliveCount = 0;
+volatile bool gMuted = true;
 uint16_t gRefillCount = 0;
 volatile uint32_t gSamplesOut = 0;
 volatile uint32_t gEdges = 0;
@@ -62,6 +61,7 @@ volatile uint32_t gUnderruns = 0;
 uint32_t OneBitAudioOutput::samplesOut() const { return gSamplesOut; }
 uint32_t OneBitAudioOutput::edges() const { return gEdges; }
 uint32_t OneBitAudioOutput::underruns() const { return gUnderruns; }
+void OneBitAudioOutput::setMuted(bool muted) { gMuted = muted; }
 
 void OneBitAudioOutput::begin(AudioSource& source, uint8_t pin) {
   gSource = &source;
@@ -122,7 +122,10 @@ void IRAM_ATTR OneBitAudioOutput::onTimer() {
   }
   gSamplesOut = gSamplesOut + 1;
 
-  if (s > kThreshold) {
+  if (gMuted) {
+    gHigh = false;  // устройство выключено: пин в нуле при любом сигнале
+    gQuietCount = kSilenceSamples;
+  } else if (s > kThreshold) {
     gHigh = true;
     gQuietCount = 0;
   } else if (s < -kThreshold) {
@@ -134,24 +137,16 @@ void IRAM_ATTR OneBitAudioOutput::onTimer() {
     gHigh = false;  // тишина: пин в нуле, пищалка молчит
   }
 
+  // Пин трогаем только на перепаде: в тишине в регистр GPIO не пишется
+  // ничего, и пищалке нечего рендерить.
   if (gHigh != gWasHigh) {
     gEdges = gEdges + 1;
     gWasHigh = gHigh;
-  }
-
-  if (++gKeepAliveCount >= kKeepAliveSamples) {
-    gKeepAliveCount = 0;
-    // Импульс в противоположное состояние; ниже пин сразу вернётся обратно.
     if (gHigh) {
-      GPIO.out_w1tc = gPinMask;
-    } else {
       GPIO.out_w1ts = gPinMask;
+    } else {
+      GPIO.out_w1tc = gPinMask;
     }
-  }
-  if (gHigh) {
-    GPIO.out_w1ts = gPinMask;
-  } else {
-    GPIO.out_w1tc = gPinMask;
   }
 
   if (++gRefillCount >= kBlockSamples) {

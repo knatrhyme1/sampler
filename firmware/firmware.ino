@@ -97,6 +97,8 @@ void enterOff() {
   exporter.abort();
   transport.stop();
   audio.stopAll();
+  // Выключенное устройство молчит целиком: вывод заглушён до enterHome().
+  audioOutput.setMuted(true);
   soundMeterLevel = 0.0f;
   powerState = PowerState::Off;
   ui.showOff();
@@ -166,6 +168,7 @@ void renderUiMode() {
 void enterHome() {
   powerState = PowerState::Home;
   uiMode = UiMode::HomeMain;
+  audioOutput.setMuted(false);
   renderUiMode();
   Serial.println("power: home/ready");
 }
