@@ -22,7 +22,7 @@ constexpr uint16_t rgb565(uint8_t r, uint8_t g, uint8_t b) {
 constexpr int16_t kScreenW = 320;
 constexpr int16_t kScreenH = 240;
 
-// Базовая палитра — см. docs/boot-screen-brief.md.
+// Базовая палитра — см. docs/archive/boot-screen-brief.md.
 constexpr uint16_t kColorBg = rgb565(0x05, 0x05, 0x06);
 constexpr uint16_t kColorCream = rgb565(0xF5, 0xEF, 0xE1);
 constexpr uint16_t kColorOrange = rgb565(0xFF, 0x6A, 0x2B);

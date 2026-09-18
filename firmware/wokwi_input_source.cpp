@@ -75,7 +75,7 @@ bool WokwiInputSource::bitToEvent(uint8_t srNum, uint8_t dBit, bool pressed,
     return true;
   }
   if (dBit == 3) {
-    // Кнопка включения/выключения — тоже не с MPK, своя, см. docs/boot-screen-brief.md.
+    // Кнопка включения/выключения — тоже не с MPK, своя, см. docs/archive/boot-screen-brief.md.
     ev.type = InputEventType::ControlChange;
     ev.channel = MPK_CHANNEL_KEYS;
     ev.number = DEVICE_CC_POWER;

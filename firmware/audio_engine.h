@@ -1,6 +1,6 @@
 // Звуковой движок: голоса ваншотов -> микшер -> мастер-шина (стори 4.x,
 // путь StepEvent -> Engine -> Voices -> Mix -> Output из
-// docs/poc-backlog-draft.md, E.1). Не знает, куда уходит звук: сэмплы
+// docs/archive/poc-backlog-draft.md, E.1). Не знает, куда уходит звук: сэмплы
 // забирает вывод (живой звук — audio_output_1bit.h в Wokwi, на железе —
 // I2S-кодек; экспорт — pattern_export.h), вызывая renderBlock() с частотой,
 // заданной в begin().

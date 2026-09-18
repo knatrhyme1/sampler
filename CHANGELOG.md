@@ -102,7 +102,7 @@
 - Экраны включения / загрузки / приветствия на ILI9341
   (`firmware/ui_screens.cpp/h`, интеграция в `firmware/firmware.ino` через
   кнопку POWER с защитой от случайного нажатия) по брифу
-  [`docs/boot-screen-brief.md`](docs/boot-screen-brief.md) — стори 9.0 (новая,
+  [`docs/archive/boot-screen-brief.md`](docs/archive/boot-screen-brief.md) — стори 9.0 (новая,
   вне исходного скоупа PoC)
 - `firmware/diagram.json` дополнен экраном ILI9341, кнопкой POWER, пятью
   74HC165 и восемью потенциометрами для симуляции полного набора физических

@@ -7,7 +7,7 @@
 // будет заменить на чтение настоящего MPK mini по USB-MIDI (стори 3.3), не
 // трогая остальной код.
 //
-// Плюс экран включения/загрузки/приветствия (см. docs/boot-screen-brief.md):
+// Плюс экран включения/загрузки/приветствия (см. docs/archive/boot-screen-brief.md):
 // кнопка POWER (CC DEVICE_CC_POWER) переключает устройство между "выключено"
 // и загрузкой, после которой показывается главный экран.
 
@@ -259,7 +259,7 @@ void updateExport() {
   }
 }
 
-// Навигационный кластер (B.2/B.4, docs/poc-backlog-draft.md): один и тот же
+// Навигационный кластер (B.2/B.4, docs/archive/poc-backlog-draft.md): один и тот же
 // набор команд ведёт себя по-разному в зависимости от текущего экрана.
 void handleNavCommand(NavCommand cmd) {
   if (cmd == NavCommand::None || powerState != PowerState::Home) return;
