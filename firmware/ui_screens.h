@@ -36,12 +36,15 @@ class UiScreens {
   // focus == HomeFocus::Sections.
   // metronomeOn — настройка "метроном щёлкает при проигрывании", а не факт
   // щелчков. playing — транспорт проекта (PLAY), показывается в шапке.
+  // Если главный экран уже на дисплее, перерисовывается только то, что
+  // изменилось с прошлого вызова (BPM, метроном, рамки разделов).
   void showHome(uint16_t bpm, uint8_t activeSection, uint8_t sectionCursor, HomeFocus focus,
                 bool metronomeOn, bool playing);
   // Перерисовывает только статус транспорта в шапке главного экрана.
   void updateHomeTransport(bool playing);
-  // Перерисовывает только полосу индикатора уровня сигнала справа (без
-  // fillScreen всего экрана — иначе моргает на каждый кадр). level (0..1) —
+  // Перерисовывает только изменившуюся часть полосы индикатора уровня
+  // сигнала справа (без fillScreen всего экрана — иначе моргает на каждый
+  // кадр). level (0..1) —
   // реальное значение, посчитанное в firmware.ino по фактическому состоянию
   // ШИМ-канала метронома, а не декоративная анимация.
   void updateSoundMeter(float level);
@@ -52,6 +55,8 @@ class UiScreens {
   // Перерисовывает только полосу прогресса и процент.
   void updateExportProgress(uint8_t percent);
   // Список пунктов меню (B.2), selected — индекс подсвеченного пункта.
+  // Если список уже на дисплее, перерисовываются только две строки —
+  // бывшая и новая подсвеченная.
   void showMenuList(uint8_t selected);
   // Заглушка страницы пункта меню — полноэкранная страница (не оверлей,
   // решено в B.2), содержимое конкретных пунктов (TEMPO/TRACK/...) отдельная
@@ -90,6 +95,23 @@ class UiScreens {
   Adafruit_ILI9341 tft_;
   uint8_t lastFilledSegs_ = 0;
 
+  // Что сейчас нарисовано на экране. Нужен, чтобы showHome()/showMenuList()
+  // при смене курсора перерисовывали только изменившиеся элементы, а не
+  // весь экран: полная перерисовка в симуляции видна глазом и съедает
+  // отзывчивость (docs/known-issues.md, п. 4).
+  enum class Screen : uint8_t { None, Home, MenuList, Other };
+  Screen screen_ = Screen::None;
+
+  // Последнее нарисованное состояние главного экрана.
+  uint16_t homeBpm_ = 0;
+  uint8_t homeActiveSection_ = 0;
+  uint8_t homeSectionCursor_ = 0;
+  HomeFocus homeFocus_ = HomeFocus::Sections;
+  bool homeMetronomeOn_ = false;
+  bool homePlaying_ = false;
+
+  uint8_t menuSelected_ = 0;
+
   uint8_t lastMeterFillPx_ = 255;  // 255 = ещё не рисовали, следующий вызов перерисует с нуля
 
   bool bootDrawn_ = false;
@@ -101,6 +123,13 @@ class UiScreens {
   uint8_t seqPlayheadStep_ = 255;  // 255 — столбец сейчас не подсвечен
 
   uint8_t nextRand();
+  // Строка шрифтом Adafruit_GFX (5x7, size — масштаб) на сплошном фоне bg.
+  // Рисуется в канвас в RAM и уходит на экран одним окном адресов.
+  void drawText(int16_t x, int16_t y, const char* text, uint8_t size, uint16_t fg, uint16_t bg);
+  void drawHomeBpm(uint16_t bpm, bool focused);
+  void drawHomeMetronome(bool on, bool focused);
+  void drawHomeSection(uint8_t section, bool active, bool cursor);
+  void drawMenuRow(uint8_t item, bool selected);
   void drawSequencerCell(const StepSequencer& seq, uint8_t track, uint8_t step,
                          bool cursor);
   void drawSequencerLabel(uint8_t track, bool selected);
