@@ -37,9 +37,12 @@
 
 - **В браузере:** [проект в Wokwi](https://wokwi.com/projects/475304919575815169)
   (синхронизируется с репозиторием вручную). Кнопка POWER включает
-  устройство.
-- **Локально:** `arduino-cli compile --fqbn esp32:esp32:esp32s3 firmware`,
-  симуляция — `wokwi-cli` с `firmware/wokwi.toml`.
+  устройство. Веб-редактор Wokwi собирает прошивку без PSRAM — это его
+  ограничение, см. [known-issues, п. 5](docs/known-issues.md).
+- **Локально:** `arduino-cli compile -e firmware` — без `--fqbn`: опции
+  платы N16R8 (16 МБ QIO, octal-PSRAM, разметка флеша) берутся из
+  `firmware/sketch.yaml`, а сборка под другую конфигурацию останавливается
+  на `#error`. Симуляция — `wokwi-cli` с `firmware/wokwi.toml`.
 - **Тесты движка на ПК** (Python, без платы):
   `python tools/audio_bitexact_test.py` и
   `python tools/transport_timing_test.py`.

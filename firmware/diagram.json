@@ -8,7 +8,7 @@
       "id": "esp",
       "top": 520,
       "left": 0,
-      "attrs": {}
+      "attrs": { "flashSize": "16", "psramSize": "8", "psramType": "octal" }
     },
     {
       "type": "wokwi-ili9341",

@@ -15,7 +15,7 @@
 - Один коммит — одна стори (или её логически завершённая часть).
 - Заголовок — что сделано, в повелительном наклонении, без точки в конце.
 - В теле коммита: какая стори закрыта (например, «стори 0.2»), что именно
-  проверено (например, «Verified: firmware.ino compiles for esp32:esp32:esp32s3»).
+  проверено (например, «Verified: firmware.ino compiles for ESP32-S3 N16R8»).
 - Если коммит сделан в паре с Claude Code — строка `Co-Authored-By: Claude
   <модель> <noreply@anthropic.com>` в конце сообщения (см. раздел «Как
   сделан проект» в README).
@@ -72,10 +72,24 @@ python tools/transport_timing_test.py
 
 ### `firmware` (симуляция в Wokwi)
 
-Компилируется через `arduino-cli` под `esp32:esp32:esp32s3`, симулируется
-через `wokwi-cli` (`firmware/wokwi.toml`, `firmware/diagram.json`). Серийный
-вывод платы подключён к `$serialMonitor` — проверяйте лог симуляции, а не
-только факт компиляции.
+Компилируется командой `arduino-cli compile -e firmware` без `--fqbn`:
+полный FQBN платы N16R8 (`FlashMode=qio,FlashSize=16M,PSRAM=opi`, разметка
+`app3M_fat9M_16MB`) закреплён в `firmware/sketch.yaml`. Голый
+`--fqbn esp32:esp32:esp32s3` берёт настройки по умолчанию (4 МБ, PSRAM
+выключена) и останавливается на `#error` в `firmware/board_config.h` —
+так и задумано. Симулируется через `wokwi-cli` (`firmware/wokwi.toml`,
+`firmware/diagram.json`). Серийный вывод платы подключён к
+`$serialMonitor` — проверяйте лог симуляции, а не только факт компиляции.
+Сразу после строки «старт» в логе — `board flash=16384KB psram=8192KB ...`;
+строка
+`board WARNING` значит, что прошивка собрана не под N16R8.
+
+Веб-проект на wokwi.com — отдельная копия файлов из `firmware/`
+(`firmware.ino` там называется `sketch.ino`), синхронизируется вручную. В
+нём лишний файл `wokwi_web_build.h` (копия — `firmware/wokwi_web/`): веб-
+редактор собирает без PSRAM, и маркер снимает для него `#error`
+([known-issues, п. 5](docs/known-issues.md)). Прошивку с PSRAM проверяйте
+локальной сборкой.
 
 ### Реальное железо
 

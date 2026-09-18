@@ -11,6 +11,7 @@
 // кнопка POWER (CC DEVICE_CC_POWER) переключает устройство между "выключено"
 // и загрузкой, после которой показывается главный экран.
 
+#include "board_config.h"
 #include "wokwi_input_source.h"
 #include "ui_screens.h"
 #include "control_layout.h"
@@ -484,6 +485,7 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
   delay(200);  // дать монитору порта время открыться в Wokwi
   Serial.println("ESP32-S3 sampler-sequencer: старт");
+  logBoardMemory(Serial);
   inputSource.begin();
   ui.begin();
   audio.begin(kAudioSampleRate);
