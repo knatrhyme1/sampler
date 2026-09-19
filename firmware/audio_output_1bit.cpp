@@ -23,7 +23,7 @@ constexpr uint16_t kSilenceSamples = kAudioSampleRate / 250;
 
 // Задача звука живёт на ядре 0: ядро 1 занято loop() с отрисовкой экрана,
 // а полная перерисовка блокирует его на десятки миллисекунд
-// (docs/known-issues.md, п. 4). На отдельном ядре звук этого не замечает.
+// (docs/known-issues.md, п. 1). На отдельном ядре звук этого не замечает.
 constexpr BaseType_t kAudioTaskCore = 0;
 constexpr uint32_t kAudioTaskStack = 4096;
 constexpr UBaseType_t kAudioTaskPriority = 10;

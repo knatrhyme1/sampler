@@ -3,5 +3,5 @@
 # (4 МБ DIO, PSRAM выключена) — поэтому опции закреплены здесь, и
 # `arduino-cli compile firmware` без --fqbn собирает под нужную плату.
 # Разметка app3M_fat9M_16MB: два раздела приложения по 3 МБ и 9,9 МБ FAT
-# под банк сэмплов (docs/known-issues.md, п. 6).
+# под банк сэмплов (docs/known-issues.md, п. 5).
 default_fqbn: esp32:esp32:esp32s3:FlashMode=qio,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB

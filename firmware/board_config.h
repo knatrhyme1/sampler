@@ -1,5 +1,5 @@
 // Проверка, что прошивка собрана под целевую плату ESP32-S3 N16R8:
-// 16 МБ флеша в режиме QIO и 8 МБ octal-PSRAM (docs/known-issues.md, п. 5).
+// 16 МБ флеша в режиме QIO и 8 МБ octal-PSRAM (docs/known-issues.md, п. 4).
 //
 // Опции платы закреплены в sketch.yaml (default_fqbn). Голый FQBN
 // esp32:esp32:esp32s3 берёт настройки меню по умолчанию — PSRAM выключена,

@@ -198,7 +198,7 @@ class UiScreens {
   // Что сейчас нарисовано на экране. Нужен, чтобы экраны при смене курсора
   // перерисовывали только изменившиеся элементы, а не весь экран: полная
   // перерисовка в симуляции видна глазом и съедает отзывчивость
-  // (docs/known-issues.md, п. 4).
+  // (docs/known-issues.md, п. 1).
   enum class Screen : uint8_t { None, Off, Home, MenuList, Tempo, Input, Other };
   Screen screen_ = Screen::None;
 
