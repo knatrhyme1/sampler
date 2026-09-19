@@ -9,6 +9,7 @@
 | [`verification.md`](verification.md) | Что и где на самом деле проверено |
 | [`known-issues.md`](known-issues.md) | Что ещё сломано, медленно или не проверено |
 | [`mpk-mapping.md`](mpk-mapping.md) | Снятое поведение настоящего контроллера |
+| [`hardware-bom.md`](hardware-bom.md) | Планируемое железо: что куплено, что докупить, что отклонено |
 | [`backlog.md`](backlog.md) | Активная работа |
 | [`roadmap.md`](roadmap.md) | Направление развития продукта |
 | [`code-review-brief.md`](code-review-brief.md) | Бриф для будущего код-ревью в Claude Code |
@@ -29,6 +30,8 @@ known-issues
 ```
 
 `mpk-mapping.md` — когда работаете с вводом с контроллера.
+
+`hardware-bom.md` — когда работаете с выводом звука, питанием, USB-хостом или готовите сборку на железе.
 
 `backlog.md` — когда берёте активную задачу.
 
