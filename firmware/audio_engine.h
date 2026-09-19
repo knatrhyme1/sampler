@@ -32,6 +32,21 @@ struct OneShot {
   uint32_t sampleRate;  // частота, в которой записан ваншот
 };
 
+// Настройки микшера (раздел 2): полосы 0..3 — каналы секвенсора, 4 —
+// метроном, 5 — мастер. Громкость 0..100 линейно по амплитуде; 100 — это
+// прежний фиксированный уровень, поэтому с настройками по умолчанию звук
+// бит в бит тот же, что до появления микшера.
+struct MixerSettings {
+  static const uint8_t kStrips = 6;
+  static const uint8_t kMetronomeStrip = 4;
+  static const uint8_t kMasterStrip = 5;
+  static const uint8_t kMaxVolume = 100;
+
+  uint8_t volume[kStrips] = {kMaxVolume, kMaxVolume, kMaxVolume,
+                             kMaxVolume, kMaxVolume, kMaxVolume};
+  bool muted[kStrips] = {false, false, false, false, false, false};
+};
+
 class AudioEngine {
  public:
   // Голоса 0..3 — каналы секвенсора (по одному на канал: новый удар
@@ -58,9 +73,15 @@ class AudioEngine {
   void trigger(uint8_t channel, const OneShot& sample);
   void triggerMetronome(bool accent);
   void stopAll();
+  // Громкости и mute микшера. Действуют сразу, в том числе на уже
+  // звучащие голоса (со следующего блока).
+  void applyMixer(const MixerSettings& mix);
   // Пиковый уровень мастер-шины (0..32767) с прошлого вызова — для
   // индикатора OUT.
   uint16_t takePeak();
+  // Пиковый уровень голоса после его фейдера (до мастера) с прошлого
+  // вызова — для индикаторов каналов микшера.
+  uint16_t takeVoicePeak(uint8_t voice);
 
   // Рендерит ровно n сэмплов (1..kMaxBlockSamples) в out. Вызывается из
   // задачи вывода или из экспорта — в обоих случаях это контекст задачи,
@@ -74,7 +95,6 @@ class AudioEngine {
     uint32_t pos;
     uint32_t frac;     // дробная часть позиции, 16 бит
     uint32_t stepQ16;  // шаг по ваншоту на один выходной сэмпл, 1<<16 = 1:1
-    uint16_t gainQ8;   // 256 = 0 дБ
     bool active;
   };
 
@@ -85,14 +105,12 @@ class AudioEngine {
     const int16_t* data;
     uint32_t length;
     uint32_t stepQ16;
-    uint16_t gainQ8;
     bool valid;
   };
 
   static const uint16_t kMaxClickLength = kMaxOutputRate * 30 / 1000;  // 30 мс
 
-  void postTrigger(uint8_t index, const int16_t* data, uint32_t length, uint32_t stepQ16,
-                   uint16_t gainQ8);
+  void postTrigger(uint8_t index, const int16_t* data, uint32_t length, uint32_t stepQ16);
   // Разбирает почтовый ящик в начале блока; выполняется в контексте
   // рендера.
   void applyPending();
@@ -104,7 +122,14 @@ class AudioEngine {
   uint16_t clickLength_ = 0;
   int16_t clickNormal_[kMaxClickLength] = {};
   int16_t clickAccent_[kMaxClickLength] = {};
+  // Громкость голоса (256 = 0 дБ) и мастера; пишет applyMixer(),
+  // читает рендер один раз на блок.
+  uint16_t voiceGainQ8_[kVoices] = {};
   uint16_t masterGainQ8_ = 256;
   uint16_t peak_ = 0;
+  uint16_t voicePeak_[kVoices] = {};
+  // Копия громкостей на время блока — принадлежит рендеру.
+  uint16_t gainQ8_[kVoices] = {};
+  uint16_t blockMasterQ8_ = 256;
   portMUX_TYPE mux_ = portMUX_INITIALIZER_UNLOCKED;
 };

@@ -24,7 +24,9 @@
 class PatternExporter {
  public:
   static constexpr uint32_t kSampleRate = 44100;
-  static const uint8_t kLoops = 2;  // сколько раз паттерн повторяется в файле
+  // Сколько раз паттерн повторяется в файле. Паттерн — 4 такта, этого
+  // хватает, чтобы послушать его целиком.
+  static const uint8_t kLoops = 1;
 
   enum class State : uint8_t { Idle, Running, Done, Aborted };
 
@@ -40,9 +42,11 @@ class PatternExporter {
   static Plan plan(const StepSequencer& pattern, uint16_t bpm, const OneShot* kit);
 
   // serial — порт, в который пишется файл; normalBaud — скорость, на
-  // которую он возвращается после экспорта.
+  // которую он возвращается после экспорта. mix — настройки микшера: файл
+  // звучит с теми же громкостями, что и устройство (метроном в файл не
+  // попадает).
   void start(const StepSequencer& pattern, uint16_t bpm, const OneShot* kit,
-             HardwareSerial& serial, uint32_t normalBaud);
+             const MixerSettings& mix, HardwareSerial& serial, uint32_t normalBaud);
   // Рендерит и отправляет следующую порцию; вызывать из loop(), пока
   // state() == Running.
   void process();
@@ -54,6 +58,8 @@ class PatternExporter {
   uint8_t percent() const;
   const char* fileName() const { return fileName_; }
   const Plan& currentPlan() const { return plan_; }
+  // Темп, с которым идёт (или прошёл) последний экспорт.
+  uint16_t bpm() const { return bpm_; }
 
  private:
   static constexpr uint32_t kExportBaud = 2000000;

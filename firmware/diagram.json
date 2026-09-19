@@ -19,57 +19,57 @@
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
-      "id": "pot1",
+      "type": "wokwi-ky-040",
+      "id": "enc1",
       "top": -140,
       "left": 960,
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
-      "id": "pot2",
+      "type": "wokwi-ky-040",
+      "id": "enc2",
       "top": -140,
       "left": 1060,
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
-      "id": "pot3",
+      "type": "wokwi-ky-040",
+      "id": "enc3",
       "top": -140,
       "left": 1160,
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
-      "id": "pot4",
+      "type": "wokwi-ky-040",
+      "id": "enc4",
       "top": -140,
       "left": 1260,
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
-      "id": "pot5",
+      "type": "wokwi-ky-040",
+      "id": "enc5",
       "top": -20,
       "left": 960,
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
-      "id": "pot6",
+      "type": "wokwi-ky-040",
+      "id": "enc6",
       "top": -20,
       "left": 1060,
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
-      "id": "pot7",
+      "type": "wokwi-ky-040",
+      "id": "enc7",
       "top": -20,
       "left": 1160,
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
-      "id": "pot8",
+      "type": "wokwi-ky-040",
+      "id": "enc8",
       "top": -20,
       "left": 1260,
       "attrs": {}
@@ -79,360 +79,252 @@
       "id": "pad1",
       "top": -50,
       "left": 0,
-      "attrs": {
-        "color": "#cc3333",
-        "label": "PAD1"
-      }
+      "attrs": { "color": "#cc3333", "label": "PAD1" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad2",
       "top": -50,
       "left": 80,
-      "attrs": {
-        "color": "#cc3333",
-        "label": "PAD2"
-      }
+      "attrs": { "color": "#cc3333", "label": "PAD2" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad3",
       "top": -50,
       "left": 160,
-      "attrs": {
-        "color": "#cc3333",
-        "label": "PAD3"
-      }
+      "attrs": { "color": "#cc3333", "label": "PAD3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad4",
       "top": -50,
       "left": 240,
-      "attrs": {
-        "color": "#cc3333",
-        "label": "PAD4"
-      }
+      "attrs": { "color": "#cc3333", "label": "PAD4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad5",
       "top": -140,
       "left": 0,
-      "attrs": {
-        "color": "#cc3333",
-        "label": "PAD5"
-      }
+      "attrs": { "color": "#cc3333", "label": "PAD5" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad6",
       "top": -140,
       "left": 80,
-      "attrs": {
-        "color": "#cc3333",
-        "label": "PAD6"
-      }
+      "attrs": { "color": "#cc3333", "label": "PAD6" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad7",
       "top": -140,
       "left": 160,
-      "attrs": {
-        "color": "#cc3333",
-        "label": "PAD7"
-      }
+      "attrs": { "color": "#cc3333", "label": "PAD7" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad8",
       "top": -140,
       "left": 240,
-      "attrs": {
-        "color": "#cc3333",
-        "label": "PAD8"
-      }
+      "attrs": { "color": "#cc3333", "label": "PAD8" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btn_play",
       "top": -260,
       "left": 0,
-      "attrs": {
-        "color": "green",
-        "label": "PLAY/STOP"
-      }
+      "attrs": { "color": "green", "label": "PLAY/STOP" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btn_mode",
       "top": -260,
       "left": 90,
-      "attrs": {
-        "color": "blue",
-        "label": "MODE"
-      }
+      "attrs": { "color": "blue", "label": "MODE" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btn_power",
       "top": -260,
       "left": 180,
-      "attrs": {
-        "color": "red",
-        "label": "POWER"
-      }
+      "attrs": { "color": "red", "label": "POWER" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key1",
       "top": 260,
       "left": 0,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "C3"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "C3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key2",
       "top": 260,
       "left": 42,
-      "attrs": {
-        "color": "#111111",
-        "label": "C#3"
-      }
+      "attrs": { "color": "#111111", "label": "C#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key3",
       "top": 260,
       "left": 84,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "D3"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "D3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key4",
       "top": 260,
       "left": 126,
-      "attrs": {
-        "color": "#111111",
-        "label": "D#3"
-      }
+      "attrs": { "color": "#111111", "label": "D#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key5",
       "top": 260,
       "left": 168,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "E3"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "E3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key6",
       "top": 260,
       "left": 210,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "F3"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "F3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key7",
       "top": 260,
       "left": 252,
-      "attrs": {
-        "color": "#111111",
-        "label": "F#3"
-      }
+      "attrs": { "color": "#111111", "label": "F#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key8",
       "top": 260,
       "left": 294,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "G3"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "G3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key9",
       "top": 260,
       "left": 336,
-      "attrs": {
-        "color": "#111111",
-        "label": "G#3"
-      }
+      "attrs": { "color": "#111111", "label": "G#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key10",
       "top": 260,
       "left": 378,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "A3"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "A3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key11",
       "top": 260,
       "left": 420,
-      "attrs": {
-        "color": "#111111",
-        "label": "A#3"
-      }
+      "attrs": { "color": "#111111", "label": "A#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key12",
       "top": 260,
       "left": 462,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "B3"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "B3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key13",
       "top": 260,
       "left": 504,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "C4"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "C4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key14",
       "top": 260,
       "left": 546,
-      "attrs": {
-        "color": "#111111",
-        "label": "C#4"
-      }
+      "attrs": { "color": "#111111", "label": "C#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key15",
       "top": 260,
       "left": 588,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "D4"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "D4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key16",
       "top": 260,
       "left": 630,
-      "attrs": {
-        "color": "#111111",
-        "label": "D#4"
-      }
+      "attrs": { "color": "#111111", "label": "D#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key17",
       "top": 260,
       "left": 672,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "E4"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "E4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key18",
       "top": 260,
       "left": 714,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "F4"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "F4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key19",
       "top": 260,
       "left": 756,
-      "attrs": {
-        "color": "#111111",
-        "label": "F#4"
-      }
+      "attrs": { "color": "#111111", "label": "F#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key20",
       "top": 260,
       "left": 798,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "G4"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "G4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key21",
       "top": 260,
       "left": 840,
-      "attrs": {
-        "color": "#111111",
-        "label": "G#4"
-      }
+      "attrs": { "color": "#111111", "label": "G#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key22",
       "top": 260,
       "left": 882,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "A4"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "A4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key23",
       "top": 260,
       "left": 924,
-      "attrs": {
-        "color": "#111111",
-        "label": "A#4"
-      }
+      "attrs": { "color": "#111111", "label": "A#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key24",
       "top": 260,
       "left": 966,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "B4"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "B4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key25",
       "top": 260,
       "left": 1008,
-      "attrs": {
-        "color": "#f5f5f5",
-        "label": "C5"
-      }
+      "attrs": { "color": "#f5f5f5", "label": "C5" }
     },
     {
       "type": "wokwi-74hc165",
@@ -474,334 +366,259 @@
       "id": "r1",
       "top": 650,
       "left": 250,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r2",
       "top": 650,
       "left": 295,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r3",
       "top": 650,
       "left": 340,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r4",
       "top": 650,
       "left": 385,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r5",
       "top": 650,
       "left": 430,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r6",
       "top": 650,
       "left": 475,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r7",
       "top": 650,
       "left": 520,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r8",
       "top": 650,
       "left": 565,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r9",
       "top": 650,
       "left": 610,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r10",
       "top": 650,
       "left": 655,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r11",
       "top": 690,
       "left": 250,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r12",
       "top": 690,
       "left": 295,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r13",
       "top": 690,
       "left": 340,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r14",
       "top": 690,
       "left": 385,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r15",
       "top": 690,
       "left": 430,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r16",
       "top": 690,
       "left": 475,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r17",
       "top": 690,
       "left": 520,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r18",
       "top": 690,
       "left": 565,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r19",
       "top": 690,
       "left": 610,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r20",
       "top": 690,
       "left": 655,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r21",
       "top": 730,
       "left": 250,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r22",
       "top": 730,
       "left": 295,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r23",
       "top": 730,
       "left": 340,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r24",
       "top": 730,
       "left": 385,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r25",
       "top": 730,
       "left": 430,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r26",
       "top": 730,
       "left": 475,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r27",
       "top": 730,
       "left": 520,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r28",
       "top": 730,
       "left": 565,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r29",
       "top": 730,
       "left": 610,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r30",
       "top": 730,
       "left": 655,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r31",
       "top": 770,
       "left": 250,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r32",
       "top": 770,
       "left": 295,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r33",
       "top": 770,
       "left": 340,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r34",
       "top": 770,
       "left": 385,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r35",
       "top": 770,
       "left": 430,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r36",
       "top": 770,
       "left": 475,
-      "attrs": {
-        "value": "10000"
-      }
+      "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-buzzer",
       "id": "bz1",
       "top": 420,
       "left": -140,
-      "attrs": {
-        "mode": "accurate",
-        "volume": "0.6"
-      }
+      "attrs": { "mode": "accurate", "volume": "0.6" }
     }
   ],
   "connections": [
@@ -866,147 +683,195 @@
       []
     ],
     [
-      "pot1:VCC",
+      "enc1:VCC",
       "esp:3V3",
       "red",
       []
     ],
     [
-      "pot1:GND",
+      "enc1:GND",
       "esp:GND.1",
       "black",
       []
     ],
     [
-      "pot1:SIG",
+      "enc1:CLK",
       "esp:1",
       "green",
       []
     ],
     [
-      "pot2:VCC",
-      "esp:3V3",
-      "red",
-      []
-    ],
-    [
-      "pot2:GND",
-      "esp:GND.1",
-      "black",
-      []
-    ],
-    [
-      "pot2:SIG",
+      "enc1:DT",
       "esp:2",
-      "green",
+      "blue",
       []
     ],
     [
-      "pot3:VCC",
+      "enc2:VCC",
       "esp:3V3",
       "red",
       []
     ],
     [
-      "pot3:GND",
+      "enc2:GND",
       "esp:GND.1",
       "black",
       []
     ],
     [
-      "pot3:SIG",
+      "enc2:CLK",
       "esp:4",
       "green",
       []
     ],
     [
-      "pot4:VCC",
-      "esp:3V3",
-      "red",
-      []
-    ],
-    [
-      "pot4:GND",
-      "esp:GND.1",
-      "black",
-      []
-    ],
-    [
-      "pot4:SIG",
+      "enc2:DT",
       "esp:5",
-      "green",
+      "blue",
       []
     ],
     [
-      "pot5:VCC",
+      "enc3:VCC",
       "esp:3V3",
       "red",
       []
     ],
     [
-      "pot5:GND",
+      "enc3:GND",
       "esp:GND.1",
       "black",
       []
     ],
     [
-      "pot5:SIG",
+      "enc3:CLK",
       "esp:6",
       "green",
       []
     ],
     [
-      "pot6:VCC",
-      "esp:3V3",
-      "red",
-      []
-    ],
-    [
-      "pot6:GND",
-      "esp:GND.1",
-      "black",
-      []
-    ],
-    [
-      "pot6:SIG",
+      "enc3:DT",
       "esp:7",
-      "green",
+      "blue",
       []
     ],
     [
-      "pot7:VCC",
+      "enc4:VCC",
       "esp:3V3",
       "red",
       []
     ],
     [
-      "pot7:GND",
+      "enc4:GND",
       "esp:GND.1",
       "black",
       []
     ],
     [
-      "pot7:SIG",
+      "enc4:CLK",
       "esp:8",
       "green",
       []
     ],
     [
-      "pot8:VCC",
+      "enc4:DT",
+      "esp:9",
+      "blue",
+      []
+    ],
+    [
+      "enc5:VCC",
       "esp:3V3",
       "red",
       []
     ],
     [
-      "pot8:GND",
+      "enc5:GND",
       "esp:GND.1",
       "black",
       []
     ],
     [
-      "pot8:SIG",
-      "esp:9",
+      "enc5:CLK",
+      "esp:38",
       "green",
+      []
+    ],
+    [
+      "enc5:DT",
+      "esp:39",
+      "blue",
+      []
+    ],
+    [
+      "enc6:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "enc6:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "enc6:CLK",
+      "esp:40",
+      "green",
+      []
+    ],
+    [
+      "enc6:DT",
+      "esp:41",
+      "blue",
+      []
+    ],
+    [
+      "enc7:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "enc7:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "enc7:CLK",
+      "esp:42",
+      "green",
+      []
+    ],
+    [
+      "enc7:DT",
+      "esp:47",
+      "blue",
+      []
+    ],
+    [
+      "enc8:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "enc8:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "enc8:CLK",
+      "esp:48",
+      "green",
+      []
+    ],
+    [
+      "enc8:DT",
+      "esp:3",
+      "blue",
       []
     ],
     [

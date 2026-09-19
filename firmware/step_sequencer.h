@@ -1,6 +1,6 @@
 // Паттерн степ-секвенсора раздела 1 (драм-машина в духе Channel Rack из
-// FL Studio): 4 канала (KICK/SNARE/HAT/PERC) x 16 шагов — два такта
-// восьмыми нотами. Модель Pattern, отдельная от UI
+// FL Studio): 4 канала (KICK/SNARE/HAT/PERC) x 16 шагов — четыре такта
+// четвертями (шаг = доля, 4 шага на такт). Модель Pattern, отдельная от UI
 // (docs/archive/poc-backlog-draft.md, D).
 //
 // Здесь только данные: какие удары стоят в сетке. Часы, темп и запуск
@@ -14,9 +14,9 @@
 class StepSequencer {
  public:
   static const uint8_t kTracks = 4;
-  static const uint8_t kSteps = 16;       // 2 такта по 8 восьмых
-  static const uint8_t kStepsPerBar = 8;
-  static const uint8_t kStepsPerBeat = 2;  // восьмые: 2 шага на четверть
+  static const uint8_t kSteps = 16;       // 4 такта по 4 четверти
+  static const uint8_t kStepsPerBar = 4;
+  static const uint8_t kStepsPerBeat = 1;  // четверти: шаг = доля
 
   bool isOn(uint8_t track, uint8_t step) const {
     return (steps_[track] >> step) & 1;
@@ -32,6 +32,15 @@ class StepSequencer {
 
   void clear() {
     for (uint8_t t = 0; t < kTracks; t++) steps_[t] = 0;
+  }
+
+  void clearTrack(uint8_t track) { steps_[track] = 0; }
+
+  bool empty() const {
+    for (uint8_t t = 0; t < kTracks; t++) {
+      if (steps_[t] != 0) return false;
+    }
+    return true;
   }
 
  private:

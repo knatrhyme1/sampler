@@ -52,6 +52,11 @@ MASTER_GAIN = 256
 VOICES = 5
 CHANNEL_VOICES = 4
 MAX_BLOCK = 64
+# Сетка секвенсора (firmware/step_sequencer.h): 16 шагов четвертями = 4 такта,
+# экспорт проигрывает паттерн один раз (PatternExporter::kLoops).
+STEPS = 16
+STEPS_PER_BEAT = 1
+LOOPS = 1
 
 
 def parse_sample(name):
@@ -164,12 +169,11 @@ def click_table(output_rate, freq):
 def run(output_rate, bpm, pattern, total_samples, block_limit, kit=None):
     """Гоняет оба пути по одному сценарию и возвращает две дорожки."""
     kit = kit if kit is not None else KIT
-    steps = 16
-    loops = 2
-    total_steps = steps * loops
+    steps = STEPS
+    total_steps = steps * LOOPS
 
     def step_start(i):
-        return (i * output_rate * 30) // bpm
+        return (i * output_rate * 60) // (bpm * STEPS_PER_BEAT)
 
     st = [step_q16(SAMPLES_RATE, output_rate) for _ in kit]
 

@@ -1,8 +1,41 @@
 #include "wokwi_input_source.h"
 
-#include <Arduino.h>
+#include <soc/gpio_struct.h>
 
 #include "mpk_mapping.h"
+
+namespace {
+// Энкодеры KY-040 (enc1..enc8 в diagram.json): CLK и DT каждой крутилки.
+// Пины подобраны так, чтобы не задеть USB (19/20 — под MPK на железе),
+// UART0 (43/44), октальную PSRAM (33–37) и strapping-пины 0/45/46.
+constexpr uint8_t kKnobClk[WokwiInputSource::kNumKnobs] = {1, 4, 6, 8, 38, 40, 42, 48};
+// DT читает прерывание — таблица лежит в RAM, а не во флеше.
+const uint8_t DRAM_ATTR kKnobDt[WokwiInputSource::kNumKnobs] = {2, 5, 7, 9, 39, 41, 47, 3};
+
+// Сколько щелчков накопила крутилка с прошлого опроса. Пишет прерывание,
+// забирает задача опроса.
+volatile int16_t gKnobCount[WokwiInputSource::kNumKnobs] = {};
+portMUX_TYPE gKnobMux = portMUX_INITIALIZER_UNLOCKED;
+
+constexpr uint32_t kScanPeriodMs = 2;
+// Выше loop() (приоритет 1), ниже задачи звука (10, ядро 0).
+constexpr UBaseType_t kInputTaskPriority = 3;
+constexpr uint32_t kInputTaskStack = 3072;
+
+inline bool IRAM_ATTR readPinFast(uint8_t pin) {
+  return pin < 32 ? ((GPIO.in >> pin) & 1) : ((GPIO.in1.val >> (pin - 32)) & 1);
+}
+
+// Спад CLK — щелчок. Уровень DT в этот момент даёт направление: HIGH — по
+// часовой, LOW — против (так KY-040 ведёт себя в Wokwi).
+void IRAM_ATTR onKnobClk(void* arg) {
+  const uint8_t i = (uint8_t)(uintptr_t)arg;
+  const int16_t step = readPinFast(kKnobDt[i]) ? 1 : -1;
+  portENTER_CRITICAL_ISR(&gKnobMux);
+  gKnobCount[i] += step;
+  portEXIT_CRITICAL_ISR(&gKnobMux);
+}
+}  // namespace
 
 void WokwiInputSource::begin() {
   pinMode(pinLoad_, OUTPUT);
@@ -10,11 +43,33 @@ void WokwiInputSource::begin() {
   pinMode(pinData_, INPUT);
   digitalWrite(pinLoad_, HIGH);
   digitalWrite(pinClock_, LOW);
-
   lastBits_ = readShiftRegisters();
-  for (uint8_t i = 0; i < kNumPots; i++) {
-    potLastSent_[i] = analogRead(potPins_[i]) >> 5;  // 12-бит ADC -> 0..127
+
+  for (uint8_t i = 0; i < kNumKnobs; i++) {
+    pinMode(kKnobClk[i], INPUT_PULLUP);
+    pinMode(kKnobDt[i], INPUT_PULLUP);
+    attachInterruptArg(kKnobClk[i], onKnobClk, (void*)(uintptr_t)i, FALLING);
   }
+
+  queue_ = xQueueCreate(kQueueLength, sizeof(InputEvent));
+  // На ядре 1, рядом с loop(): так задача вытесняет именно его, а не звук.
+  xTaskCreatePinnedToCore(&WokwiInputSource::taskEntry, "input", kInputTaskStack, this,
+                          kInputTaskPriority, nullptr, 1);
+}
+
+void WokwiInputSource::taskEntry(void* self) {
+  WokwiInputSource* src = static_cast<WokwiInputSource*>(self);
+  TickType_t wake = xTaskGetTickCount();
+  for (;;) {
+    src->scan();
+    vTaskDelayUntil(&wake, pdMS_TO_TICKS(kScanPeriodMs));
+  }
+}
+
+void WokwiInputSource::push(const InputEvent& ev) {
+  // Очередь переполняется, только если loop() стоит больше секунды; тогда
+  // новое событие теряется, а не блокирует опрос.
+  xQueueSend(queue_, &ev, 0);
 }
 
 uint64_t WokwiInputSource::readShiftRegisters() {
@@ -85,17 +140,27 @@ bool WokwiInputSource::bitToEvent(uint8_t srNum, uint8_t dBit, bool pressed,
   return false;  // sr5.D4..D7 не используются
 }
 
-bool WokwiInputSource::poll(InputEvent& ev) {
+void WokwiInputSource::scan() {
   const uint64_t bits = readShiftRegisters();
   const uint64_t changed = bits ^ lastBits_;
   if (changed != 0) {
-    for (uint8_t i = 0; i < kNumBits; i++) {
+    // Все изменившиеся входы за один проход: одновременные нажатия не
+    // откладываются на следующий опрос.
+    for (int8_t i = kNumBits - 1; i >= 0; i--) {
       const uint64_t mask = (uint64_t)1 << i;
       if (!(changed & mask)) continue;
+      // Дребезг: кнопка (и в Wokwi тоже — он его имитирует) несколько
+      // миллисекунд после перепада скачет между 0 и 1. Раньше опрос раз в
+      // 2 мс принимал эти скачки за отдельные нажатия. После принятого
+      // перепада вход 20 мс не слушаем; если за это время кнопку уже
+      // отпустили, отпускание примется сразу после паузы — сравнение с
+      // принятым состоянием его не потеряет.
+      if (lockout_[i] > 0) continue;
+      lastBits_ ^= mask;
+      lockout_[i] = kDebounceScans;
 
       // Кнопка тянет вход в LOW (пул-ап резистор к VCC на неотжатом входе).
       const bool pressed = (bits & mask) == 0;
-      lastBits_ = (lastBits_ & ~mask) | (bits & mask);
 
       // i — позиция бита в 40-битном слове (0 — младший, т.е. прочитанный
       // последним). Переводим её в (номер микросхемы, номер входа D0..D7),
@@ -105,22 +170,29 @@ bool WokwiInputSource::poll(InputEvent& ev) {
       const uint8_t srNum = kNumShiftRegisters - chipOffset;
       const uint8_t dBit = 7 - (k % 8);
 
-      if (bitToEvent(srNum, dBit, pressed, ev)) {
-        return true;
-      }
+      InputEvent ev = {};
+      if (bitToEvent(srNum, dBit, pressed, ev)) push(ev);
     }
+  }
+  for (uint8_t i = 0; i < kNumBits; i++) {
+    if (lockout_[i] > 0) lockout_[i]--;
   }
 
-  for (uint8_t i = 0; i < kNumPots; i++) {
-    const int value = analogRead(potPins_[i]) >> 5;  // 0..127
-    if (abs(value - potLastSent_[i]) >= 2) {
-      potLastSent_[i] = value;
-      ev.type = InputEventType::ControlChange;
-      ev.channel = MPK_CHANNEL_KNOBS;
-      ev.number = MPK_KNOB_CC_BASE + i;
-      ev.value = (uint8_t)value;
-      return true;
-    }
+  for (uint8_t i = 0; i < kNumKnobs; i++) {
+    portENTER_CRITICAL(&gKnobMux);
+    const int16_t count = gKnobCount[i];
+    gKnobCount[i] = 0;
+    portEXIT_CRITICAL(&gKnobMux);
+    if (count == 0) continue;
+    InputEvent ev = {};
+    ev.type = InputEventType::KnobTurn;
+    ev.channel = MPK_CHANNEL_KNOBS;
+    ev.number = MPK_KNOB_CC_BASE + i;
+    ev.delta = (int8_t)constrain(count, -127, 127);
+    push(ev);
   }
-  return false;
+}
+
+bool WokwiInputSource::poll(InputEvent& ev) {
+  return queue_ != nullptr && xQueueReceive(queue_, &ev, 0) == pdTRUE;
 }

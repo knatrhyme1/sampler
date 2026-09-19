@@ -9,7 +9,7 @@ void Transport::begin(uint32_t sampleRate, AudioEngine& engine, const OneShot* k
   playhead_ = kPlayheadIdle;
 }
 
-// Шаг — восьмая нота: 60 / bpm / kStepsPerBeat секунды.
+// Шаг — доля (четверть): 60 / bpm / kStepsPerBeat секунды.
 void Transport::setTempo(uint16_t bpm) {
   if (bpm == 0) bpm = 1;
   tempoBpm_ = bpm;
@@ -66,6 +66,13 @@ void Transport::toggleStep(uint8_t track, uint8_t step) {
   if (track >= StepSequencer::kTracks || step >= StepSequencer::kSteps) return;
   portENTER_CRITICAL(&mux_);
   pattern_.toggle(track, step);
+  portEXIT_CRITICAL(&mux_);
+}
+
+void Transport::clearTrack(uint8_t track) {
+  if (track >= StepSequencer::kTracks) return;
+  portENTER_CRITICAL(&mux_);
+  pattern_.clearTrack(track);
   portEXIT_CRITICAL(&mux_);
 }
 

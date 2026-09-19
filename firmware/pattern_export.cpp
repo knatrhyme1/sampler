@@ -29,8 +29,9 @@ bool trackHasSteps(const StepSequencer& pattern, uint8_t track) {
 PatternExporter::Plan PatternExporter::plan(const StepSequencer& pattern, uint16_t bpm,
                                             const OneShot* kit) {
   const uint32_t patternSteps = (uint32_t)StepSequencer::kSteps * kLoops;
-  // Шаг — восьмая нота: 60 / bpm / 2 = 30 / bpm секунды.
-  const uint32_t patternSamples = (uint32_t)((uint64_t)patternSteps * kSampleRate * 30 / bpm);
+  // Шаг — доля: 60 / (bpm * kStepsPerBeat) секунды.
+  const uint32_t patternSamples = (uint32_t)((uint64_t)patternSteps * kSampleRate * 60 /
+                                             ((uint32_t)bpm * StepSequencer::kStepsPerBeat));
 
   uint32_t tail = 0;
   for (uint8_t t = 0; t < StepSequencer::kTracks; t++) {
@@ -49,11 +50,13 @@ PatternExporter::Plan PatternExporter::plan(const StepSequencer& pattern, uint16
 }
 
 uint32_t PatternExporter::stepStartSample(uint32_t step) const {
-  return (uint32_t)((uint64_t)step * kSampleRate * 30 / bpm_);
+  return (uint32_t)((uint64_t)step * kSampleRate * 60 /
+                    ((uint32_t)bpm_ * StepSequencer::kStepsPerBeat));
 }
 
 void PatternExporter::start(const StepSequencer& pattern, uint16_t bpm, const OneShot* kit,
-                            HardwareSerial& serial, uint32_t normalBaud) {
+                            const MixerSettings& mix, HardwareSerial& serial,
+                            uint32_t normalBaud) {
   if (state_ == State::Running) return;
   buildCrc32Table();
 
@@ -65,6 +68,7 @@ void PatternExporter::start(const StepSequencer& pattern, uint16_t bpm, const On
   plan_ = plan(pattern, bpm, kit);
 
   engine_.begin(kSampleRate);
+  engine_.applyMixer(mix);
   sampleIndex_ = 0;
   nextStep_ = 0;
   totalSteps_ = (uint32_t)StepSequencer::kSteps * kLoops;

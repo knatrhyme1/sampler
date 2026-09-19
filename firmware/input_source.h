@@ -16,13 +16,20 @@ enum class InputEventType : uint8_t {
   NoteOn,
   NoteOff,
   ControlChange,
+  // Поворот бесконечной крутилки: не абсолютное положение, а сколько
+  // щелчков и в какую сторону её провернули с прошлого события. Параметр,
+  // к которому крутилка сейчас привязана, меняется относительно своего
+  // текущего значения, поэтому при смене экрана или параметра ничего не
+  // прыгает. number — CC крутилки (MPK_KNOB_CC_BASE + индекс).
+  KnobTurn,
 };
 
 struct InputEvent {
   InputEventType type;
   uint8_t channel;  // MIDI-канал, 1-based
-  uint8_t number;   // номер ноты (NoteOn/NoteOff) или CC (ControlChange)
+  uint8_t number;   // номер ноты (NoteOn/NoteOff) или CC (ControlChange, KnobTurn)
   uint8_t value;    // сила нажатия (NoteOn) или значение CC (0-127)
+  int8_t delta;     // KnobTurn: щелчки, > 0 — по часовой стрелке
 };
 
 class InputSource {
