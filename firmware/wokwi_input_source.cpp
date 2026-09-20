@@ -121,8 +121,8 @@ bool WokwiInputSource::bitToEvent(uint8_t srNum, uint8_t dBit, bool pressed,
     return true;
   }
   if (dBit == 1 || dBit == 2) {
-    // У настоящего MPK mini нет кнопок Play/Stop (см. бэклог, риск стори 3.2),
-    // поэтому это не ноты, а отдельные CC для транспорта/режима.
+    // У настоящего MPK mini нет кнопок Play/Stop, поэтому это не ноты, а
+    // отдельные CC устройства (input_source.h).
     ev.type = InputEventType::ControlChange;
     ev.channel = MPK_CHANNEL_KEYS;
     ev.number = (dBit == 1) ? DEVICE_CC_PLAY_STOP : DEVICE_CC_MODE;
@@ -130,7 +130,7 @@ bool WokwiInputSource::bitToEvent(uint8_t srNum, uint8_t dBit, bool pressed,
     return true;
   }
   if (dBit == 3) {
-    // Кнопка включения/выключения — тоже не с MPK, своя, см. docs/archive/boot-screen-brief.md.
+    // Кнопка включения/выключения — тоже не с MPK, своя.
     ev.type = InputEventType::ControlChange;
     ev.channel = MPK_CHANNEL_KEYS;
     ev.number = DEVICE_CC_POWER;
@@ -150,9 +150,9 @@ void WokwiInputSource::scan() {
       const uint64_t mask = (uint64_t)1 << i;
       if (!(changed & mask)) continue;
       // Дребезг: кнопка (и в Wokwi тоже — он его имитирует) несколько
-      // миллисекунд после перепада скачет между 0 и 1. Раньше опрос раз в
-      // 2 мс принимал эти скачки за отдельные нажатия. После принятого
-      // перепада вход 20 мс не слушаем; если за это время кнопку уже
+      // миллисекунд после перепада скачет между 0 и 1, и опрос раз в 2 мс
+      // принял бы скачки за отдельные нажатия. Поэтому после принятого
+      // перепада вход 20 мс не слушаем. Если за это время кнопку уже
       // отпустили, отпускание примется сразу после паузы — сравнение с
       // принятым состоянием его не потеряет.
       if (lockout_[i] > 0) continue;

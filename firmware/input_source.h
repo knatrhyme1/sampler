@@ -1,6 +1,6 @@
 // Общий интерфейс источника нот/CC: секвенсор работает одинаково,
 // приходят ли события с виртуального контроллера в Wokwi или с
-// настоящего MPK mini по USB-MIDI на железе (стори 3.1).
+// настоящего MPK mini по USB-MIDI на железе.
 #pragma once
 
 #include <stdint.h>
@@ -11,6 +11,9 @@
 #define DEVICE_CC_PLAY_STOP 118
 #define DEVICE_CC_MODE      119
 #define DEVICE_CC_POWER     120
+
+// Номер крутилки 0..MPK_KNOB_COUNT-1 или «ни одну ещё не крутили».
+constexpr uint8_t kNoKnob = 255;
 
 enum class InputEventType : uint8_t {
   NoteOn,

@@ -7,6 +7,8 @@ sound-engine/*.wav
 
 # Arduino / arduino-cli build output
 firmware/build/
+# Самотест прошивки (tools/firmware_selftest.py)
+/build/
 firmware/*.bin
 firmware/*.elf
 firmware/*.map

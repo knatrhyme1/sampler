@@ -82,9 +82,10 @@ void PatternExporter::start(const StepSequencer& pattern, uint16_t bpm, const On
 
   serial_->flush();
   serial_->updateBaudRate(kExportBaud);
-  serial_->printf("\nEXPORT-BEGIN id=%08x file=%s bytes=%u lines=%u\n", (unsigned)id_, fileName_,
-                  (unsigned)plan_.fileBytes,
-                  (unsigned)((plan_.fileBytes + kBytesPerLine - 1) / kBytesPerLine));
+  serial_->printf("\nEXPORT-BEGIN id=%08x file=%s bytes=%u lines=%u bpl=%u\n", (unsigned)id_,
+                  fileName_, (unsigned)plan_.fileBytes,
+                  (unsigned)((plan_.fileBytes + kBytesPerLine - 1) / kBytesPerLine),
+                  (unsigned)kBytesPerLine);
 
   // Заголовок WAV (PCM, моно, 16 бит).
   const uint32_t dataBytes = plan_.totalSamples * 2;
@@ -141,14 +142,6 @@ void PatternExporter::abort() {
   if (state_ == State::Running) finish(false);
 }
 
-void PatternExporter::reset() {
-  if (state_ == State::Running) return;
-  state_ = State::Idle;
-  plan_ = {};
-  bytesOut_ = 0;
-  fileName_[0] = '\0';
-}
-
 uint8_t PatternExporter::percent() const {
   if (plan_.fileBytes == 0) return 0;
   return (uint8_t)((uint64_t)bytesOut_ * 100 / plan_.fileBytes);
@@ -182,10 +175,10 @@ void PatternExporter::pushU32(uint32_t v) {
 
 void PatternExporter::emitLine() {
   if (lineLen_ == 0) return;
-  // "E:" + номер + ":" + 76 символов base64 + "\n"
-  char out[96];
+  // "E:" + номер + ":" + base64 строки + "\n"
+  char out[kLineTextMax];
   int n = snprintf(out, sizeof(out), "E:%u:", (unsigned)lineIndex_);
-  for (uint8_t i = 0; i < lineLen_; i += 3) {
+  for (uint16_t i = 0; i < lineLen_; i += 3) {
     const uint32_t chunk = ((uint32_t)lineBuf_[i] << 16) |
                            (i + 1 < lineLen_ ? (uint32_t)lineBuf_[i + 1] << 8 : 0) |
                            (i + 2 < lineLen_ ? (uint32_t)lineBuf_[i + 2] : 0);

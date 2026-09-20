@@ -50,7 +50,7 @@
     margin: 20px 0;
   }
   h2 { font-size: 17px; margin: 0 0 8px; }
-  ol { margin: 0; padding-left: 22px; }
+  ol, ul { margin: 0; padding-left: 22px; }
   li { margin: 4px 0; }
   code, kbd {
     font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -60,12 +60,14 @@
     border-radius: 4px;
   }
   .note { color: var(--muted); font-size: 14px; }
+  dt { font-weight: 600; margin-top: 10px; }
+  dd { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
 </style>
 </head>
 <body>
 <main>
   <h1>SMPLR Export</h1>
-  <p class="lead">Закладка, которая забирает WAV-экспорт паттерна из Serial Monitor в Wokwi и сохраняет его файлом.</p>
+  <p class="lead">Закладка, которая забирает WAV-экспорт паттерна из Serial Monitor в Wokwi и сохраняет его файлом на компьютер.</p>
 
   <a class="bookmark" id="bookmarklet" href="#">SMPLR Export</a>
 
@@ -75,17 +77,40 @@
       <li>Покажи панель закладок: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>.</li>
       <li>Перетащи оранжевую кнопку «SMPLR Export» на панель закладок.</li>
     </ol>
+    <p class="note">Нажимать кнопку здесь бесполезно — она работает только как закладка на странице Wokwi.</p>
+    <p class="note"><b>Если закладка уже стояла раньше</b> — перетащи заново: 20.09.2026 формат передачи изменился, и старая версия скажет «потеряно N строк».</p>
   </div>
 
   <div class="card">
     <h2>Экспорт</h2>
     <ol>
-      <li>Открой проект в Wokwi, запусти симуляцию, нарисуй паттерн в разделе 1.</li>
-      <li>Нажми закладку «SMPLR Export» — в правом нижнем углу появится плашка «Жду экспорт».</li>
-      <li>На устройстве с главного экрана: <code>MODE</code> → пункт <code>EXPORT</code> (<code>PAD2</code> вниз, <code>PAD3</code> открыть) → <code>PAD5</code>. Из секвенсора сначала выйди на главный экран (<code>PAD5</code>).</li>
-      <li>Когда полоса дойдёт до конца, браузер скачает <code>smplr-pattern-120bpm.wav</code>.</li>
+      <li>Открой проект в Wokwi, запусти симуляцию, нарисуй паттерн в разделе 1 (SEQ).</li>
+      <li><b>Сначала нажми закладку «SMPLR Export»</b> — в правом нижнем углу появится плашка «жду экспорт». Только потом запускай экспорт на устройстве.</li>
+      <li>На устройстве: <code>MODE</code> → <code>PAD2</code> вниз до пункта <code>EXPORT</code> → <code>PAD5</code> открыть → <code>PAD5</code> старт. Если ты внутри раздела, сначала выйди на главный экран кнопкой <code>PAD7</code>.</li>
+      <li>Жди. Проценты видно и на плашке, и в заголовке вкладки — можно уйти на другую вкладку и поглядывать.</li>
+      <li>Когда дойдёт до конца, прозвучит короткий сигнал, а браузер скачает <code>smplr-pattern-&lt;темп&gt;bpm.wav</code> в папку «Загрузки».</li>
     </ol>
-    <p class="note">Файл проверяется по CRC32: если хоть одна строка потерялась, плашка скажет об этом, а файл не скачается. Закладку достаточно нажать один раз за сессию — она ловит все следующие экспорты.</p>
+    <p class="note">Файл проверяется по CRC32: если хоть одна строка потерялась, плашка скажет об этом и файл не скачается — то есть битый файл на диск не попадёт. Закладку достаточно нажать один раз за сессию: она ловит и следующие экспорты.</p>
+  </div>
+
+  <div class="card">
+    <h2>Если что-то пошло не так</h2>
+    <dl>
+      <dt>«ошибка: потеряно N строк»</dt>
+      <dd>Закладку нажали после старта экспорта, и начало файла уже ушло из видимой части монитора. Запусти экспорт заново — плашка уже слушает.</dd>
+
+      <dt>Плашка не появилась</dt>
+      <dd>Закладка нажата не на вкладке Wokwi, или страница ещё не догрузилась. Открой проект, дождись кнопки «Play» и нажми закладку снова.</dd>
+
+      <dt>Всё идёт очень медленно</dt>
+      <dd>Монитор копит текст от прошлых экспортов, и с каждым разом приём медленнее. Перезагрузи вкладку Wokwi (<kbd>F5</kbd>), запусти симуляцию заново и нажми закладку.</dd>
+
+      <dt>Симуляция «спит»</dt>
+      <dd>Wokwi резко замедляется, когда его вкладка свёрнута или спрятана за другой. На время экспорта держи вкладку открытой.</dd>
+
+      <dt>Файл скачался, но хочется проверить</dt>
+      <dd>В <code>tools/</code> лежит <code>wav_from_serial.py</code>: он собирает WAV из сохранённого текста монитора и сверяет ту же CRC32. Нужен, если файл не скачался, а текст в мониторе ещё есть — выдели его, скопируй, сохрани в <code>.txt</code> и перетащи на <code>wav_from_serial.bat</code>.</dd>
+    </dl>
   </div>
 </main>
 
@@ -103,9 +128,31 @@ function smplrExport() {
   badge.style.cssText =
     "position:fixed;right:16px;bottom:16px;z-index:2147483647;background:#111;color:#f5efe1;" +
     "font:13px/1.45 ui-monospace,Consolas,monospace;padding:10px 14px;border:1px solid #ff6a2b;" +
-    "border-radius:8px;max-width:380px;white-space:pre-wrap;box-shadow:0 4px 16px rgba(0,0,0,.4)";
+    "border-radius:8px;max-width:380px;white-space:pre-wrap;box-shadow:0 4px 16px rgba(0,0,0,.4);" +
+    "cursor:pointer";
+  badge.title = "нажми, чтобы убрать плашку";
+  badge.onclick = () => badge.remove();
   document.body.appendChild(badge);
   const say = (text) => { badge.textContent = "SMPLR Export\n" + text; };
+
+  // Заголовок вкладки показывает проценты: за длинным экспортом удобно
+  // следить, не переключаясь на эту вкладку.
+  const pageTitle = document.title;
+  const setTitle = (text) => { document.title = text ? text + " · " + pageTitle : pageTitle; };
+  // Короткий сигнал по готовности — экспорт идёт минутами.
+  const beep = () => {
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.frequency.value = 880;
+      gain.gain.value = 0.05;
+      osc.connect(gain).connect(ac.destination);
+      osc.start();
+      osc.stop(ac.currentTime + 0.18);
+      setTimeout(() => ac.close(), 500);
+    } catch (err) { /* звук не обязателен */ }
+  };
 
   const crcTable = new Uint32Array(256);
   for (let i = 0; i < 256; i++) {
@@ -130,10 +177,15 @@ function smplrExport() {
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   };
 
+  const human = (s) => {
+    s = Math.max(0, Math.round(s));
+    return s < 60 ? s + " с" : Math.floor(s / 60) + " мин " + (s % 60) + " с";
+  };
+
   const finished = new Set();
   let session = null;
   let lastResult = "";  // итог прошлого экспорта остаётся на плашке, пока ждём следующий
-  const report = (text) => { lastResult = text; say(text); };
+  const report = (text) => { lastResult = text; say(text); setTitle(""); };
   const TAIL = 800000;  // сколько последних символов монитора разбирать за тик
 
   const tick = () => {
@@ -150,27 +202,38 @@ function smplrExport() {
     const tail = cut.slice(0, cut.lastIndexOf("\n") + 1);
 
     if (!session) {
-      const begins = [...tail.matchAll(/EXPORT-BEGIN id=([0-9a-f]{8}) file=(\S+) bytes=(\d+) lines=(\d+)/g)];
+      // bpl (байт в строке) печатает прошивка; у старых сборок его нет — там было 57.
+      const begins = [...tail.matchAll(/EXPORT-BEGIN id=([0-9a-f]{8}) file=(\S+) bytes=(\d+) lines=(\d+)(?: bpl=(\d+))?/g)];
       const b = begins.filter((m) => !finished.has(m[1])).pop();
       if (!b) {
         say((lastResult ? lastResult + "\n\n" : "") + "жду экспорт: MENU → EXPORT → PAD5");
         return;
       }
-      session = { id: b[1], file: b[2], bytes: +b[3], lines: +b[4], parts: new Array(+b[4]), got: 0, endSeenAt: 0 };
+      session = {
+        id: b[1], file: b[2], bytes: +b[3], lines: +b[4], bpl: +(b[5] || 57),
+        parts: new Array(+b[4]), got: 0, endSeenAt: 0, startedAt: Date.now(),
+      };
     }
 
     const s = session;
     const from = tail.lastIndexOf("EXPORT-BEGIN id=" + s.id);
     const region = from >= 0 ? tail.slice(from) : tail;
-    // Все строки, кроме последней, несут ровно 57 байт = 76 символов base64;
-    // строка другой длины — обрывок, её ждём целиком на следующем тике.
-    const lastLen = 4 * Math.ceil((s.bytes - 57 * (s.lines - 1)) / 3);
+    // Все строки, кроме последней, несут ровно s.bpl байт; строка другой
+    // длины — обрывок, её ждём целиком на следующем тике.
+    const b64len = (n) => 4 * Math.ceil(n / 3);
+    const fullLen = b64len(s.bpl);
+    const lastLen = b64len(s.bytes - s.bpl * (s.lines - 1));
     for (const m of region.matchAll(/^E:(\d+):([A-Za-z0-9+/=]+)\r?$/gm)) {
       const idx = +m[1];
-      const expected = idx === s.lines - 1 ? lastLen : 76;
-      if (idx < s.lines && s.parts[idx] === undefined && m[2].length === expected) {
+      const expected = idx === s.lines - 1 ? lastLen : fullLen;
+      if (idx >= s.lines) continue;
+      if (s.parts[idx] !== undefined) continue;
+      if (m[2].length === expected) {
         s.parts[idx] = m[2];
         s.got++;
+      } else if (m[2].length > expected) {
+        // Строка целиком, но длиннее ожидаемой: прошивка новее закладки.
+        s.wrongLen = (s.wrongLen || 0) + 1;
       }
     }
 
@@ -184,20 +247,30 @@ function smplrExport() {
     const end = region.match(new RegExp("EXPORT-END id=" + s.id + " crc32=([0-9a-f]{8})"));
     const pct = Math.floor((s.got * 100) / s.lines);
     if (!end) {
-      say(`${s.file}\nполучено ${pct}% (${s.got}/${s.lines} строк)`);
+      const elapsed = (Date.now() - s.startedAt) / 1000;
+      const left = s.got > 0 ? elapsed * (s.lines - s.got) / s.got : 0;
+      setTitle(pct + "%");
+      say(`${s.file}\nполучено ${pct}% (${s.got}/${s.lines} строк)\nосталось примерно ${human(left)}`);
       return;
     }
     if (s.got < s.lines) {
       s.endSeenAt = s.endSeenAt || Date.now();
       if (Date.now() - s.endSeenAt > 5000) {
         finished.add(s.id);
+        const stale = s.wrongLen > 0;
         session = null;
-        report(`ошибка: потеряно ${s.lines - s.got} строк, файл не сохранён.\nЗапусти экспорт ещё раз.`);
+        report(
+          `ошибка: потеряно ${s.lines - s.got} строк, файл не сохранён.\n` +
+          (stale
+            ? "Похоже, закладка старее прошивки: строки другой длины.\nПеретащи «SMPLR Export» на панель закладок заново\nиз tools/export_bookmarklet.html."
+            : "Запусти экспорт ещё раз.")
+        );
       }
       return;
     }
 
     finished.add(s.id);
+    const took = (Date.now() - s.startedAt) / 1000;
     session = null;
     const out = new Uint8Array(s.bytes);
     let pos = 0;
@@ -217,10 +290,14 @@ function smplrExport() {
     }
     // __smplrExportDeliver — точка подмены доставки для автотеста.
     (window.__smplrExportDeliver || download)(new Blob([out], { type: "audio/wav" }), s.file);
-    report(`готово: ${s.file} (${Math.round(s.bytes / 1024)} КБ) скачан`);
+    beep();
+    report(`готово за ${human(took)}: ${s.file} (${Math.round(s.bytes / 1024)} КБ)\nищи файл в папке «Загрузки»`);
   };
 
-  window.__smplrExport = { say, stop: () => clearInterval(timer) };
+  window.__smplrExport = {
+    say,
+    stop: () => { clearInterval(timer); setTitle(""); badge.remove(); delete window.__smplrExport; },
+  };
   const timer = setInterval(tick, 400);
   tick();
 }

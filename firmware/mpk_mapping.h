@@ -24,6 +24,7 @@ static const uint8_t MPK_PAD_NOTES_BANK_B[8] = {59, 60, 62, 64, 65, 67, 69, 71};
 
 // Крутилки K1..K8 -> CC (MPK_KNOB_CC_BASE + индекс 0..7)
 #define MPK_KNOB_CC_BASE 70
+#define MPK_KNOB_COUNT   8
 
 // Джойстик: X — Pitch Bend на MPK_CHANNEL_JOYSTICK, Y — CC ниже (mod wheel)
 #define MPK_JOYSTICK_Y_CC 1

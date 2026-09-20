@@ -133,4 +133,7 @@ def main():
 
 
 if __name__ == "__main__":
+    # В pipe (CI, лог) Windows отдаёт stdout в ANSI-кодировке — русский
+    # текст превращается в кракозябры. Консоль и так в UTF-8.
+    sys.stdout.reconfigure(encoding="utf-8")
     sys.exit(main())

@@ -164,11 +164,14 @@ void Transport::render(int16_t* out, uint16_t n) {
       fireStep(pattern, metronome);
     }
 
+    // Кусок кончается там, где раньше наступит одно из трёх: конец шага,
+    // конец запрошенного блока или предел движка за один вызов.
     const uint32_t left = (stepSamples_ > intoStep_) ? (stepSamples_ - intoStep_) : 1;
     const uint32_t room = (uint32_t)(n - done);
-    const uint16_t chunk = (uint16_t)(left < room ? left : room);
+    uint32_t chunk = left < room ? left : room;
+    if (chunk > AudioEngine::kMaxBlockSamples) chunk = AudioEngine::kMaxBlockSamples;
 
-    engine_->renderBlock(out + done, chunk);
+    engine_->renderBlock(out + done, (uint16_t)chunk);
     done += chunk;
     intoStep_ += chunk;
 

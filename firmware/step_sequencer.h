@@ -1,12 +1,9 @@
 // Паттерн степ-секвенсора раздела 1 (драм-машина в духе Channel Rack из
 // FL Studio): 4 канала (KICK/SNARE/HAT/PERC) x 16 шагов — четыре такта
-// четвертями (шаг = доля, 4 шага на такт). Модель Pattern, отдельная от UI
-// (docs/archive/poc-backlog-draft.md, D).
+// четвертями (шаг = доля, 4 шага на такт).
 //
 // Здесь только данные: какие удары стоят в сетке. Часы, темп и запуск
-// голосов — в transport.h: музыкальное время считается в сэмплах звукового
-// вывода, а не по millis() в loop(), иначе перерисовка экрана сдвигает
-// долю такта (docs/known-issues.md, п. 1).
+// голосов — в transport.h.
 #pragma once
 
 #include <stdint.h>
@@ -18,20 +15,17 @@ class StepSequencer {
   static const uint8_t kStepsPerBar = 4;
   static const uint8_t kStepsPerBeat = 1;  // четверти: шаг = доля
 
+  // «Нет значения» для номера шага и канала: транспорт стоит, курсора или
+  // выбора нет.
+  static const uint8_t kNoStep = 255;
+  static const uint8_t kNoTrack = 255;
+
   bool isOn(uint8_t track, uint8_t step) const {
     return (steps_[track] >> step) & 1;
   }
 
   void toggle(uint8_t track, uint8_t step) {
     steps_[track] ^= (uint16_t)(1u << step);
-  }
-
-  // Биты всех шагов канала разом — транспорту удобнее снимать их одним
-  // словом, чем опрашивать по одному под замком.
-  uint16_t trackBits(uint8_t track) const { return steps_[track]; }
-
-  void clear() {
-    for (uint8_t t = 0; t < kTracks; t++) steps_[t] = 0;
   }
 
   void clearTrack(uint8_t track) { steps_[track] = 0; }

@@ -1,6 +1,6 @@
 // Экраны устройства на ILI9341 (320x240, альбомная).
-// Дизайн — раскадровка в docs/archive/boot-screen-brief.md, загрузочная анимация —
-// канвас "SMPLR Boot Screen" в Claude Design (глитч-логотип + прогресс-бар).
+// Загрузочная анимация — глитч-логотип и прогресс-бар (макет "SMPLR Boot
+// Screen" в Claude Design).
 // Рисуется примитивами Adafruit_GFX, без изображений — под ограничения
 // реальной прошивки.
 //
@@ -14,6 +14,7 @@
 #include <Adafruit_ILI9341.h>
 
 #include "audio_engine.h"
+#include "input_source.h"
 #include "piano_roll.h"
 #include "step_sequencer.h"
 
@@ -30,7 +31,7 @@ constexpr uint8_t kSectionMixer = 1;
 constexpr uint8_t kSectionPianoRoll = 2;
 constexpr uint8_t kSectionArrangement = 3;
 
-// Пункты меню (B.2) в порядке показа.
+// Пункты меню (кнопка MODE) в порядке показа.
 constexpr uint8_t kMenuItemCount = 5;
 constexpr uint8_t kMenuItemTrack = 0;
 constexpr uint8_t kMenuItemTempo = 1;
@@ -38,8 +39,7 @@ constexpr uint8_t kMenuItemInput = 2;
 constexpr uint8_t kMenuItemSystem = 3;
 constexpr uint8_t kMenuItemExport = 4;
 
-// Палитра — docs/archive/boot-screen-brief.md; общая для обоих файлов
-// реализации.
+// Палитра интерфейса; общая для обоих файлов реализации.
 namespace uicolor {
 constexpr uint16_t rgb565(uint8_t r, uint8_t g, uint8_t b) {
   return (uint16_t)(((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3));
@@ -65,6 +65,9 @@ constexpr uint16_t kTrack[4] = {kOrange, kCyan, kLime, kMagenta};
 constexpr int16_t kScreenW = 320;
 constexpr int16_t kScreenH = 240;
 }  // namespace uicolor
+
+// Бегущего такта на шкале аранжировки нет: транспорт стоит.
+constexpr uint8_t kNoPlayBar = 255;
 
 enum class ExportStatus : uint8_t { Ready, Running, Done, Aborted, Empty };
 
@@ -129,7 +132,7 @@ class UiScreens {
   void showMenuStub(uint8_t itemIndex);
   // TEMPO: темп и метроном. row — строка под курсором (0 — BPM, 1 — MET).
   void showTempo(uint16_t bpm, bool metronomeOn, uint8_t row);
-  // INPUT: скорость крутилок и последнее событие крутилки (knob 255 — ещё
+  // INPUT: скорость крутилок и последнее событие крутилки (kNoKnob — ещё
   // не крутили).
   void showInput(uint8_t knobSpeed, uint8_t lastKnob, int8_t lastDelta);
   void showSystem(const SystemInfo& info);
@@ -149,11 +152,11 @@ class UiScreens {
   void updateSequencerCursor(const StepSequencer& seq, uint8_t oldTrack, uint8_t oldStep,
                              uint8_t cursorTrack, uint8_t cursorStep);
   // Бегущий шаг: зажигает новый столбец и гасит прошлый, либо убирает
-  // подсветку совсем (playhead == 255, транспорт стоит).
+  // подсветку совсем (playhead == StepSequencer::kNoStep, транспорт стоит).
   void updateSequencerPlayhead(const StepSequencer& seq, uint8_t playhead,
                                uint8_t cursorTrack, uint8_t cursorStep);
   void updateSequencerHeader(bool playing, uint16_t bpm, bool metronomeOn);
-  // Вторая строка подсказки: обычная (confirmTrack == 255) или просьба
+  // Вторая строка подсказки: обычная (confirmTrack == kNoTrack) или просьба
   // подтвердить очистку канала.
   void updateSequencerFooter(uint8_t confirmTrack);
 
@@ -177,28 +180,26 @@ class UiScreens {
   void updateArrangementCursor(uint8_t oldRow, uint8_t oldBar, uint8_t cursorRow,
                                uint8_t cursorBar, const StepSequencer& seq,
                                const PianoRoll& roll);
-  // playBar — такт на шкале 0..15, 255 — транспорт стоит.
+  // playBar — такт на шкале 0..15 или kNoPlayBar, если транспорт стоит.
   void updateArrangementPlayhead(uint8_t playBar);
 
   // Сколько строк нот пиано-ролла видно на экране.
   static const uint8_t kPianoVisibleRows = 12;
 
  private:
-  // Аппаратный SPI на "родных" пинах ESP32-S3 (SCK=12/MISO=13/MOSI=11/SS=10
-  // из pins_arduino.h), через глобальный объект SPI без ремапа на GPIO-
-  // матрице. Пробовали и bit-bang (слишком медленно в Wokwi — fillScreen
-  // выглядел как зависшая симуляция), и аппаратный SPI на кастомных пинах
-  // через SPIClass::begin(sck,miso,mosi,ss) (команды уходили без ошибок, но
-  // чип экрана в Wokwi их не видел — симулятор SPI-периферии ESP32-S3
-  // надёжно работает только на дефолтных пинах, не на произвольной
-  // GPIO-матрице). См. CHANGELOG.md.
+  // Кэш «что нарисовано» ещё пуст: следующий вызов перерисует с нуля.
+  static const uint8_t kNotDrawn = 255;
+
+  // Аппаратный SPI строго на "родных" пинах ESP32-S3 (SCK=12/MISO=13/
+  // MOSI=11/SS=10 из pins_arduino.h), через глобальный объект SPI: на других
+  // пинах симулятор Wokwi команды экрану не доставляет, а программный
+  // (bit-bang) SPI для него слишком медленный.
   Adafruit_ILI9341 tft_;
   uint8_t lastFilledSegs_ = 0;
 
   // Что сейчас нарисовано на экране. Нужен, чтобы экраны при смене курсора
   // перерисовывали только изменившиеся элементы, а не весь экран: полная
-  // перерисовка в симуляции видна глазом и съедает отзывчивость
-  // (docs/known-issues.md, п. 1).
+  // перерисовка медленная (docs/known-issues.md, п. 1).
   enum class Screen : uint8_t { None, Off, Home, MenuList, Tempo, Input, Other };
   Screen screen_ = Screen::None;
 
@@ -214,25 +215,25 @@ class UiScreens {
   bool tempoMet_ = false;
   uint8_t tempoRow_ = 0;
   uint8_t inputSpeed_ = 0;
-  uint8_t inputKnob_ = 255;
+  uint8_t inputKnob_ = kNoKnob;
   int8_t inputDelta_ = 0;
 
-  uint8_t lastMeterFillPx_ = 255;  // 255 = ещё не рисовали, следующий вызов перерисует с нуля
+  uint8_t lastMeterFillPx_ = kNotDrawn;
   uint8_t lastPowerHoldPx_ = 0;
 
   bool bootDrawn_ = false;
-  uint8_t lastBootPercent_ = 255;
-  uint8_t lastDotPhase_ = 255;
+  uint8_t lastBootPercent_ = kNotDrawn;
+  uint8_t lastDotPhase_ = kNotDrawn;
   uint32_t rngState_ = 0x5EED5EED;
   uint32_t bootFrameStart_ = 0;
 
-  uint8_t seqPlayheadStep_ = 255;  // 255 — столбец сейчас не подсвечен
+  uint8_t seqPlayheadStep_ = StepSequencer::kNoStep;  // подсвеченный столбец
 
   uint8_t mixerMeterPx_[MixerSettings::kStrips] = {};
 
   uint8_t pianoViewBottom_ = 0;
-  uint8_t pianoPlayhead_ = 255;
-  uint8_t arrPlayBar_ = 255;
+  uint8_t pianoPlayhead_ = StepSequencer::kNoStep;
+  uint8_t arrPlayBar_ = kNoPlayBar;
 
   uint8_t nextRand();
   // Строка шрифтом Adafruit_GFX (5x7, size — масштаб) на сплошном фоне bg.

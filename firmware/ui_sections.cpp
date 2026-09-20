@@ -7,14 +7,14 @@
 namespace {
 using uicolor::kScreenW;
 
-constexpr uint16_t kColorBg = uicolor::kBg;
-constexpr uint16_t kColorCream = uicolor::kCream;
-constexpr uint16_t kColorOrange = uicolor::kOrange;
-constexpr uint16_t kColorDim = uicolor::kDim;
-constexpr uint16_t kColorHint = uicolor::kHint;
-constexpr uint16_t kColorMagenta = uicolor::kMagenta;
-constexpr uint16_t kColorYellow = uicolor::kYellow;
-constexpr uint16_t kColorGlitchDim = uicolor::kGlitchDim;
+using uicolor::kBg;
+using uicolor::kCream;
+using uicolor::kOrange;
+using uicolor::kDim;
+using uicolor::kHint;
+using uicolor::kMagenta;
+using uicolor::kYellow;
+using uicolor::kGlitchDim;
 
 constexpr int16_t kTitleLineY = 40;
 constexpr int16_t kFooterLineY = 204;
@@ -22,7 +22,7 @@ constexpr int16_t kHint1Y = 211;
 constexpr int16_t kHint2Y = 223;
 
 // Шапка раздела в том же стиле, что у степ-секвенсора.
-void sectionTitle(Adafruit_ILI9341& tft) { tft.drawFastHLine(12, kTitleLineY, kScreenW - 24, kColorDim); }
+void sectionTitle(Adafruit_ILI9341& tft) { tft.drawFastHLine(12, kTitleLineY, kScreenW - 24, kDim); }
 }  // namespace
 
 // ---------------------------------------------------------------------------
@@ -55,38 +55,38 @@ int16_t mixStripX(uint8_t strip) {
 
 uint16_t mixStripColor(uint8_t strip) {
   if (strip < 4) return uicolor::kTrack[strip];
-  return strip == MixerSettings::kMetronomeStrip ? uicolor::kGreen : kColorCream;
+  return strip == MixerSettings::kMetronomeStrip ? uicolor::kGreen : kCream;
 }
 }  // namespace
 
 void UiScreens::drawMixerStripFrame(uint8_t strip, bool selected) {
   const int16_t x = mixStripX(strip);
   tft_.drawRoundRect(x - 2, kMixTop, kMixStripW + 4, kMixBottom - kMixTop, 4,
-                     selected ? kColorOrange : kColorBg);
+                     selected ? kOrange : kBg);
   tft_.drawRoundRect(x - 1, kMixTop + 1, kMixStripW + 2, kMixBottom - kMixTop - 2, 3,
-                     selected ? kColorOrange : kColorBg);
+                     selected ? kOrange : kBg);
 }
 
 void UiScreens::updateMixerStrip(const MixerSettings& mix, uint8_t strip, bool selected) {
   const int16_t x = mixStripX(strip);
-  tft_.fillRect(x, kMixTop + 2, kMixStripW, kMixBottom - kMixTop - 4, kColorBg);
+  tft_.fillRect(x, kMixTop + 2, kMixStripW, kMixBottom - kMixTop - 4, kBg);
   drawMixerStripFrame(strip, selected);
 
   const char* name = kMixNames[strip];
   const int16_t nameW = (int16_t)strlen(name) * 6;
   drawText(x + (kMixStripW - nameW) / 2, 48, name, 1,
-           selected ? kColorCream : kColorHint, kColorBg);
+           selected ? kCream : kHint, kBg);
 
   // Фейдер: рамка и заливка снизу на громкость.
   const uint8_t vol = mix.volume[strip];
   const bool muted = mix.muted[strip];
-  tft_.drawRect(x + kMixFaderX - 1, kMixFaderTop - 1, kMixFaderW + 2, kMixFaderH + 2, kColorDim);
+  tft_.drawRect(x + kMixFaderX - 1, kMixFaderTop - 1, kMixFaderW + 2, kMixFaderH + 2, kDim);
   if (vol > 0) {
     tft_.fillRect(x + kMixFaderX, kMixFaderTop + kMixFaderH - vol, kMixFaderW, vol,
-                  muted ? kColorDim : mixStripColor(strip));
+                  muted ? kDim : mixStripColor(strip));
   }
-  tft_.drawRect(x + kMixMeterX - 1, kMixFaderTop - 1, kMixMeterW + 2, kMixFaderH + 2, kColorDim);
-  mixerMeterPx_[strip] = 255;
+  tft_.drawRect(x + kMixMeterX - 1, kMixFaderTop - 1, kMixMeterW + 2, kMixFaderH + 2, kDim);
+  mixerMeterPx_[strip] = kNotDrawn;
   drawMixerMeter(strip, 0);
 
   char value[8];
@@ -96,12 +96,12 @@ void UiScreens::updateMixerStrip(const MixerSettings& mix, uint8_t strip, bool s
     snprintf(value, sizeof(value), "%u", (unsigned)vol);
   }
   const int16_t valueW = (int16_t)strlen(value) * 6;
-  drawText(x + (kMixStripW - valueW) / 2, 168, value, 1, muted ? kColorMagenta : kColorCream,
-           kColorBg);
+  drawText(x + (kMixStripW - valueW) / 2, 168, value, 1, muted ? kMagenta : kCream,
+           kBg);
 
   char knob[4];
   snprintf(knob, sizeof(knob), "K%u", (unsigned)(strip + 1));
-  drawText(x + (kMixStripW - 12) / 2, 182, knob, 1, kColorHint, kColorBg);
+  drawText(x + (kMixStripW - 12) / 2, 182, knob, 1, kHint, kBg);
 }
 
 void UiScreens::drawMixerMeter(uint8_t strip, uint8_t px) {
@@ -109,27 +109,27 @@ void UiScreens::drawMixerMeter(uint8_t strip, uint8_t px) {
   if (px == old) return;
   const int16_t x = mixStripX(strip) + kMixMeterX;
   const int16_t bottom = kMixFaderTop + kMixFaderH;
-  if (old == 255) {
-    tft_.fillRect(x, kMixFaderTop, kMixMeterW, kMixFaderH - px, kColorBg);
-    if (px > 0) tft_.fillRect(x, bottom - px, kMixMeterW, px, kColorCream);
+  if (old == kNotDrawn) {
+    tft_.fillRect(x, kMixFaderTop, kMixMeterW, kMixFaderH - px, kBg);
+    if (px > 0) tft_.fillRect(x, bottom - px, kMixMeterW, px, kCream);
   } else if (px > old) {
-    tft_.fillRect(x, bottom - px, kMixMeterW, px - old, kColorCream);
+    tft_.fillRect(x, bottom - px, kMixMeterW, px - old, kCream);
   } else {
-    tft_.fillRect(x, bottom - old, kMixMeterW, old - px, kColorBg);
+    tft_.fillRect(x, bottom - old, kMixMeterW, old - px, kBg);
   }
   mixerMeterPx_[strip] = px;
 }
 
 void UiScreens::showMixer(const MixerSettings& mix, uint8_t cursor) {
-  tft_.fillScreen(kColorBg);
+  tft_.fillScreen(kBg);
   screen_ = Screen::Other;
-  drawText(12, 14, "MIXER", 2, kColorCream, kColorBg);
+  drawText(12, 14, "MIXER", 2, kCream, kBg);
   sectionTitle(tft_);
   for (uint8_t i = 0; i < MixerSettings::kStrips; i++) updateMixerStrip(mix, i, i == cursor);
 
-  tft_.drawFastHLine(12, kFooterLineY, kScreenW - 24, kColorDim);
-  drawText(12, kHint1Y, "K1-K6 VOLUME  PAD1/3 SELECT  PAD6/2 +/-", 1, kColorHint, kColorBg);
-  drawText(12, kHint2Y, "PAD5 MUTE  PAD7 BACK  C3-D#3 LISTEN", 1, kColorHint, kColorBg);
+  tft_.drawFastHLine(12, kFooterLineY, kScreenW - 24, kDim);
+  drawText(12, kHint1Y, "K1-K6 VOLUME  PAD1/3 SELECT  PAD6/2 +/-", 1, kHint, kBg);
+  drawText(12, kHint2Y, "PAD5 MUTE  PAD7 BACK  C3-D#3 LISTEN", 1, kHint, kBg);
 }
 
 void UiScreens::updateMixerMeters(const float* levels) {
@@ -187,13 +187,13 @@ static int16_t rollRowY(uint8_t pitch, uint8_t viewBottom) {
 void UiScreens::drawPianoKey(uint8_t pitch, bool cursorRow) {
   const int16_t y = rollRowY(pitch, pianoViewBottom_);
   const bool black = isBlackKey(pitch);
-  tft_.fillRect(kRollKeyX, y, kRollKeyW, kRollRowH - 1, black ? kColorDim : kColorHint);
+  tft_.fillRect(kRollKeyX, y, kRollKeyW, kRollRowH - 1, black ? kDim : kHint);
   char name[6];
   noteName(pitch, name, sizeof(name));
   const bool isC = ((PianoRoll::kLowestNote + pitch) % 12) == 0;
   if (cursorRow || isC) {
-    drawText(kRollKeyX + 2, y + 1, name, 1, cursorRow ? kColorOrange : kColorBg,
-             black ? kColorDim : kColorHint);
+    drawText(kRollKeyX + 2, y + 1, name, 1, cursorRow ? kOrange : kBg,
+             black ? kDim : kHint);
   }
 }
 
@@ -201,19 +201,19 @@ void UiScreens::updatePianoCell(const PianoRoll& roll, uint8_t step, uint8_t pit
   if (pitch < pianoViewBottom_ || pitch >= pianoViewBottom_ + kPianoVisibleRows) return;
   const int16_t x = rollStepX(step);
   const int16_t y = rollRowY(pitch, pianoViewBottom_);
-  tft_.fillRect(x - 1, y - 1, kRollCellW + 2, kRollCellH + 2, kColorBg);
+  tft_.fillRect(x - 1, y - 1, kRollCellW + 2, kRollCellH + 2, kBg);
   if (roll.isOn(step, pitch)) {
-    tft_.fillRect(x, y, kRollCellW, kRollCellH, step == pianoPlayhead_ ? kColorCream : kColorYellow);
+    tft_.fillRect(x, y, kRollCellW, kRollCellH, step == pianoPlayhead_ ? kCream : kYellow);
   } else if (step == pianoPlayhead_) {
-    tft_.fillRect(x, y, kRollCellW, kRollCellH, kColorDim);
+    tft_.fillRect(x, y, kRollCellW, kRollCellH, kDim);
   } else {
     tft_.fillRect(x, y, kRollCellW, kRollCellH,
-                  isBlackKey(pitch) ? kColorBg : kColorGlitchDim);
+                  isBlackKey(pitch) ? kBg : kGlitchDim);
     if (step % StepSequencer::kStepsPerBar == 0) {
-      tft_.drawFastVLine(x, y, kRollCellH, kColorDim);
+      tft_.drawFastVLine(x, y, kRollCellH, kDim);
     }
   }
-  if (cursor) tft_.drawRect(x - 1, y - 1, kRollCellW + 2, kRollCellH + 2, kColorCream);
+  if (cursor) tft_.drawRect(x - 1, y - 1, kRollCellW + 2, kRollCellH + 2, kCream);
 }
 
 void UiScreens::drawPianoGrid(const PianoRoll& roll, uint8_t cursorStep, uint8_t cursorPitch) {
@@ -232,7 +232,7 @@ void UiScreens::updatePianoCursorLabel(uint8_t cursorStep, uint8_t cursorPitch) 
   char info[40];
   snprintf(info, sizeof(info), "%s  STEP %u  BAR %u", name, (unsigned)(cursorStep + 1),
            (unsigned)(cursorStep / StepSequencer::kStepsPerBar + 1));
-  drawTextField(12, kRollInfoY, 180, info, 1, kColorCream, kColorBg);
+  drawTextField(12, kRollInfoY, 180, info, 1, kCream, kBg);
   // Подсветка названия ноты на клавиатуре — у всех видимых строк.
   for (uint8_t r = 0; r < kPianoVisibleRows; r++) {
     const uint8_t pitch = pianoViewBottom_ + r;
@@ -242,28 +242,28 @@ void UiScreens::updatePianoCursorLabel(uint8_t cursorStep, uint8_t cursorPitch) 
 
 void UiScreens::showPianoRoll(const PianoRoll& roll, uint8_t cursorStep, uint8_t cursorPitch,
                               uint8_t viewBottom, uint8_t playhead) {
-  tft_.fillScreen(kColorBg);
+  tft_.fillScreen(kBg);
   screen_ = Screen::Other;
   pianoViewBottom_ = viewBottom;
   pianoPlayhead_ = playhead;
 
-  drawText(12, 14, "PIANO ROLL", 2, kColorCream, kColorBg);
+  drawText(12, 14, "PIANO ROLL", 2, kCream, kBg);
   // Честно предупреждаем: ноты сохраняются, но инструмента под них ещё нет.
-  drawText(kScreenW - 12 - 17 * 6, 20, "PREVIEW: NO SOUND", 1, kColorMagenta, kColorBg);
+  drawText(kScreenW - 12 - 17 * 6, 20, "PREVIEW: NO SOUND", 1, kMagenta, kBg);
   sectionTitle(tft_);
   for (uint8_t bar = 0; bar < StepSequencer::kSteps / StepSequencer::kStepsPerBar; bar++) {
     const char label[2] = {(char)('1' + bar), '\0'};
-    drawText(rollStepX(bar * StepSequencer::kStepsPerBar) + 3, 44, label, 1, kColorHint, kColorBg);
+    drawText(rollStepX(bar * StepSequencer::kStepsPerBar) + 3, 44, label, 1, kHint, kBg);
   }
   drawPianoGrid(roll, cursorStep, cursorPitch);
-  if (playhead != 255) {
-    tft_.fillRect(rollStepX(playhead), kRollMarkerY, kRollCellW, 3, kColorCream);
+  if (playhead != StepSequencer::kNoStep) {
+    tft_.fillRect(rollStepX(playhead), kRollMarkerY, kRollCellW, 3, kCream);
   }
   updatePianoCursorLabel(cursorStep, cursorPitch);
 
-  tft_.drawFastHLine(12, kFooterLineY, kScreenW - 24, kColorDim);
-  drawText(12, kHint1Y, "PAD6/2 PITCH  PAD1/3 STEP  PAD5 NOTE", 1, kColorHint, kColorBg);
-  drawText(12, kHint2Y, "PAD7 BACK  NOTES ARE KEPT, NOT PLAYED", 1, kColorHint, kColorBg);
+  tft_.drawFastHLine(12, kFooterLineY, kScreenW - 24, kDim);
+  drawText(12, kHint1Y, "PAD6/2 PITCH  PAD1/3 STEP  PAD5 NOTE", 1, kHint, kBg);
+  drawText(12, kHint2Y, "PAD7 BACK  NOTES ARE KEPT, NOT PLAYED", 1, kHint, kBg);
 }
 
 void UiScreens::updatePianoPlayhead(const PianoRoll& roll, uint8_t playhead, uint8_t cursorStep,
@@ -277,12 +277,12 @@ void UiScreens::updatePianoPlayhead(const PianoRoll& roll, uint8_t playhead, uin
       updatePianoCell(roll, step, pitch, step == cursorStep && pitch == cursorPitch);
     }
   };
-  if (playhead != 255) {
-    tft_.fillRect(rollStepX(playhead), kRollMarkerY, kRollCellW, 3, kColorCream);
+  if (playhead != StepSequencer::kNoStep) {
+    tft_.fillRect(rollStepX(playhead), kRollMarkerY, kRollCellW, 3, kCream);
     redrawColumn(playhead);
   }
-  if (prev != 255) {
-    tft_.fillRect(rollStepX(prev), kRollMarkerY, kRollCellW, 3, kColorBg);
+  if (prev != StepSequencer::kNoStep) {
+    tft_.fillRect(rollStepX(prev), kRollMarkerY, kRollCellW, 3, kBg);
     redrawColumn(prev);
   }
 }
@@ -304,7 +304,7 @@ constexpr int16_t kArrInfoY = 188;
 
 constexpr const char* kArrRowNames[kArrRows] = {"KICK", "SNARE", "HAT", "PERC", "ROLL"};
 
-uint16_t arrRowColor(uint8_t row) { return row < 4 ? uicolor::kTrack[row] : kColorYellow; }
+uint16_t arrRowColor(uint8_t row) { return row < 4 ? uicolor::kTrack[row] : kYellow; }
 
 int16_t arrBarX(uint8_t bar) { return kArrX0 + bar * kArrBarW; }
 int16_t arrRowY(uint8_t row) { return kArrTop + row * kArrRowPitch; }
@@ -315,41 +315,41 @@ void UiScreens::drawArrangementCell(uint8_t row, uint8_t bar, bool cursor,
   const int16_t x = arrBarX(bar);
   const int16_t y = arrRowY(row);
   const uint8_t patternBar = bar % (StepSequencer::kSteps / StepSequencer::kStepsPerBar);
-  tft_.fillRect(x, y, kArrBarW, kArrRowH, kColorGlitchDim);
+  tft_.fillRect(x, y, kArrBarW, kArrRowH, kGlitchDim);
   // Начало паттерна — яркая черта: видно, где блок P1 начинается заново.
-  tft_.drawFastVLine(x, y, kArrRowH, patternBar == 0 ? arrRowColor(row) : kColorDim);
+  tft_.drawFastVLine(x, y, kArrRowH, patternBar == 0 ? arrRowColor(row) : kDim);
   for (uint8_t i = 0; i < StepSequencer::kStepsPerBar; i++) {
     const uint8_t step = patternBar * StepSequencer::kStepsPerBar + i;
     const bool on = row < 4 ? seq.isOn(row, step) : roll.stepHasNotes(step);
     if (on) tft_.fillRect(x + 2 + i * 3, y + 4, 2, kArrRowH - 8, arrRowColor(row));
   }
-  if (cursor) tft_.drawRect(x, y, kArrBarW, kArrRowH, kColorCream);
+  if (cursor) tft_.drawRect(x, y, kArrBarW, kArrRowH, kCream);
 }
 
 void UiScreens::drawArrangementInfo(uint8_t cursorRow, uint8_t cursorBar) {
   char info[48];
   snprintf(info, sizeof(info), "BAR %u  %s  PATTERN P1 BAR %u", (unsigned)(cursorBar + 1),
            kArrRowNames[cursorRow], (unsigned)(cursorBar % 4 + 1));
-  drawTextField(12, kArrInfoY, kScreenW - 24, info, 1, kColorCream, kColorBg);
+  drawTextField(12, kArrInfoY, kScreenW - 24, info, 1, kCream, kBg);
 }
 
 void UiScreens::showArrangement(const StepSequencer& seq, const PianoRoll& roll,
                                 uint8_t cursorRow, uint8_t cursorBar, uint8_t playBar) {
-  tft_.fillScreen(kColorBg);
+  tft_.fillScreen(kBg);
   screen_ = Screen::Other;
-  arrPlayBar_ = 255;
+  arrPlayBar_ = kNoPlayBar;
 
-  drawText(12, 14, "ARRANGEMENT", 2, kColorCream, kColorBg);
-  drawText(kScreenW - 12 - 7 * 6, 20, "PREVIEW", 1, kColorMagenta, kColorBg);
+  drawText(12, 14, "ARRANGEMENT", 2, kCream, kBg);
+  drawText(kScreenW - 12 - 7 * 6, 20, "PREVIEW", 1, kMagenta, kBg);
   sectionTitle(tft_);
   for (uint8_t bar = 0; bar < kArrBars; bar += 4) {
     char label[4];
     snprintf(label, sizeof(label), "%u", (unsigned)(bar + 1));
-    drawText(arrBarX(bar) + 2, 46, label, 1, kColorHint, kColorBg);
+    drawText(arrBarX(bar) + 2, 46, label, 1, kHint, kBg);
   }
   for (uint8_t r = 0; r < kArrRows; r++) {
-    drawText(8, arrRowY(r) + 6, kArrRowNames[r], 1, r == cursorRow ? kColorCream : kColorHint,
-             kColorBg);
+    drawText(8, arrRowY(r) + 6, kArrRowNames[r], 1, r == cursorRow ? kCream : kHint,
+             kBg);
     for (uint8_t b = 0; b < kArrBars; b++) {
       drawArrangementCell(r, b, r == cursorRow && b == cursorBar, seq, roll);
     }
@@ -357,9 +357,9 @@ void UiScreens::showArrangement(const StepSequencer& seq, const PianoRoll& roll,
   drawArrangementInfo(cursorRow, cursorBar);
   updateArrangementPlayhead(playBar);
 
-  tft_.drawFastHLine(12, kFooterLineY, kScreenW - 24, kColorDim);
-  drawText(12, kHint1Y, "PAD1/3 BAR  PAD6/2 ROW  PAD7 BACK", 1, kColorHint, kColorBg);
-  drawText(12, kHint2Y, "ONE PATTERN LOOPS - SONG MODE LATER", 1, kColorHint, kColorBg);
+  tft_.drawFastHLine(12, kFooterLineY, kScreenW - 24, kDim);
+  drawText(12, kHint1Y, "PAD1/3 BAR  PAD6/2 ROW  PAD7 BACK", 1, kHint, kBg);
+  drawText(12, kHint2Y, "ONE PATTERN LOOPS - SONG MODE LATER", 1, kHint, kBg);
 }
 
 void UiScreens::updateArrangementCursor(uint8_t oldRow, uint8_t oldBar, uint8_t cursorRow,
@@ -368,17 +368,17 @@ void UiScreens::updateArrangementCursor(uint8_t oldRow, uint8_t oldBar, uint8_t 
   drawArrangementCell(oldRow, oldBar, false, seq, roll);
   drawArrangementCell(cursorRow, cursorBar, true, seq, roll);
   if (oldRow != cursorRow) {
-    tft_.fillRect(8, arrRowY(oldRow) + 6, 36, 8, kColorBg);
-    drawText(8, arrRowY(oldRow) + 6, kArrRowNames[oldRow], 1, kColorHint, kColorBg);
-    tft_.fillRect(8, arrRowY(cursorRow) + 6, 36, 8, kColorBg);
-    drawText(8, arrRowY(cursorRow) + 6, kArrRowNames[cursorRow], 1, kColorCream, kColorBg);
+    tft_.fillRect(8, arrRowY(oldRow) + 6, 36, 8, kBg);
+    drawText(8, arrRowY(oldRow) + 6, kArrRowNames[oldRow], 1, kHint, kBg);
+    tft_.fillRect(8, arrRowY(cursorRow) + 6, 36, 8, kBg);
+    drawText(8, arrRowY(cursorRow) + 6, kArrRowNames[cursorRow], 1, kCream, kBg);
   }
   drawArrangementInfo(cursorRow, cursorBar);
 }
 
 void UiScreens::updateArrangementPlayhead(uint8_t playBar) {
   if (playBar == arrPlayBar_) return;
-  if (playBar != 255) tft_.fillRect(arrBarX(playBar), kArrMarkerY, kArrBarW, 4, kColorCream);
-  if (arrPlayBar_ != 255) tft_.fillRect(arrBarX(arrPlayBar_), kArrMarkerY, kArrBarW, 4, kColorBg);
+  if (playBar != kNoPlayBar) tft_.fillRect(arrBarX(playBar), kArrMarkerY, kArrBarW, 4, kCream);
+  if (arrPlayBar_ != kNoPlayBar) tft_.fillRect(arrBarX(arrPlayBar_), kArrMarkerY, kArrBarW, 4, kBg);
   arrPlayBar_ = playBar;
 }

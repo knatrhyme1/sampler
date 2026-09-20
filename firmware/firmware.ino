@@ -3,9 +3,11 @@
 // Здесь — машина состояний устройства: питание, экраны и что делает каждый
 // элемент управления на каждом экране. Рисование — ui_screens.*, звук —
 // audio_engine.* / transport.*, ввод — InputSource (в Wokwi его реализует
-// WokwiInputSource, на железе заменит чтение MPK mini по USB-MIDI, стори 3.3).
+// WokwiInputSource, на железе заменит чтение MPK mini по USB-MIDI).
 //
-// Общие правила управления (docs/archive/poc-backlog-draft.md, B.2/B.4):
+// Куда уходит каждое событие ввода — handleInputEvent() в конце файла.
+//
+// Общие правила управления:
 //   PAD6/PAD2/PAD1/PAD3 — курсор вверх/вниз/влево/вправо;
 //   PAD5 — подтвердить (нажать элемент под курсором, поставить шаг);
 //   PAD7 — назад, на любом экране;
@@ -27,7 +29,7 @@
 #include "pattern_export.h"
 
 const uint32_t SERIAL_BAUD = 115200;
-const unsigned long BEAT_INTERVAL_MS = 1000;
+const unsigned long HEARTBEAT_LOG_INTERVAL_MS = 1000;  // строка heartbeat в лог
 const unsigned long POWER_HOLD_MS = 600;  // защита от случайного нажатия
 const unsigned long BOOT_DURATION_MS = 3000;
 const unsigned long BOOT_FRAME_MS = 60;  // ~16 fps перерисовки глитч-анимации
@@ -80,7 +82,7 @@ const OneShot kDefaultOneShots[StepSequencer::kTracks] = {
     {kSamplePerc, kSamplePercLength, kDefaultSamplesRate},
 };
 
-unsigned long lastBeat = 0;
+unsigned long lastHeartbeatAt = 0;
 PowerState powerState = PowerState::Off;
 UiMode uiMode = UiMode::HomeMain;
 // Куда вернуться из меню по MODE / PAD7.
@@ -95,11 +97,12 @@ uint8_t menuSelected = 0;
 uint8_t menuOpenItem = 0;
 uint8_t tempoRow = 0;
 uint8_t knobSpeedIndex = 0;
-uint8_t lastKnob = 255;
+uint8_t lastKnob = kNoKnob;
 int8_t lastKnobDelta = 0;
 // Последнее абсолютное значение крутилки, если контроллер шлёт обычный CC
-// (MPK с заводской настройкой): из него считается приращение.
-int16_t knobAbsLast[WokwiInputSource::kNumKnobs] = {-1, -1, -1, -1, -1, -1, -1, -1};
+// (MPK с заводской настройкой): из него считается приращение. Когда
+// появится адаптер USB-MIDI, этот перевод переедет в него.
+int16_t knobAbsLast[MPK_KNOB_COUNT] = {-1, -1, -1, -1, -1, -1, -1, -1};
 
 // Настройка "метроном участвует в проигрывании". Сама по себе ничего не
 // запускает: щелчки идут только пока транспорт играет (PLAY), на каждой
@@ -109,7 +112,7 @@ bool metronomeOn = false;
 // Раздел 1 — степ-секвенсор.
 uint8_t seqCursorTrack = 0;
 uint8_t seqCursorStep = 0;
-uint8_t clearConfirmTrack = 255;  // канал, для которого ждём второе PAD8
+uint8_t clearConfirmTrack = StepSequencer::kNoTrack;  // канал, для которого ждём второе PAD8
 unsigned long clearConfirmAt = 0;
 // Раздел 2 — микшер.
 uint8_t mixerCursor = 0;
@@ -236,7 +239,7 @@ void renderMenuItem() {
 
 uint8_t arrangementPlayBar() {
   const uint8_t ph = transport.playhead();
-  if (ph == Transport::kPlayheadIdle) return 255;
+  if (ph == Transport::kPlayheadIdle) return kNoPlayBar;
   const uint8_t patternBars = StepSequencer::kSteps / StepSequencer::kStepsPerBar;
   return (uint8_t)((loopCount % 4) * patternBars + ph / StepSequencer::kStepsPerBar);
 }
@@ -249,7 +252,7 @@ void renderUiMode() {
     case UiMode::Sequencer:
       ui.showSequencer(transport.pattern(), transport.playing(), transport.playhead(),
                        seqCursorTrack, seqCursorStep, currentBpm, metronomeOn);
-      if (clearConfirmTrack != 255) ui.updateSequencerFooter(clearConfirmTrack);
+      if (clearConfirmTrack != StepSequencer::kNoTrack) ui.updateSequencerFooter(clearConfirmTrack);
       break;
     case UiMode::Mixer:
       ui.showMixer(mixer, mixerCursor);
@@ -329,7 +332,7 @@ void enterOff() {
   // Выключенное устройство молчит целиком: вывод заглушён до enterHome().
   audioOutput.setMuted(true);
   soundMeterLevel = 0.0f;
-  clearConfirmTrack = 255;
+  clearConfirmTrack = StepSequencer::kNoTrack;
   exportEmptyShown = false;
   powerState = PowerState::Off;
   uiMode = UiMode::HomeMain;
@@ -367,7 +370,6 @@ void updateBoot() {
 }
 
 void handlePowerButton(const InputEvent& ev) {
-  if (ev.type != InputEventType::ControlChange || ev.number != DEVICE_CC_POWER) return;
   if (ev.value > 0) {
     powerButtonDown = true;
     powerButtonDownAt = millis();
@@ -401,9 +403,8 @@ void updatePowerButton(unsigned long now) {
 // Кнопки устройства: MODE и PLAY/STOP.
 
 // MODE открывает меню с любого экрана и возвращает туда, откуда пришли.
-// Удержание (SHIFT) — открытый вопрос B.4, пока не реализовано.
+// Удержание MODE (как SHIFT) пока не реализовано.
 void handleModeButton(const InputEvent& ev) {
-  if (ev.type != InputEventType::ControlChange || ev.number != DEVICE_CC_MODE) return;
   if (ev.value == 0) return;  // реагируем на нажатие, не на отпускание
   if (!onHome()) return;
 
@@ -416,12 +417,11 @@ void handleModeButton(const InputEvent& ev) {
   }
 }
 
-// PLAY/STOP (стори 1.2): единый транспорт проекта. Старт всегда с первого
+// PLAY/STOP: единый транспорт проекта. Старт всегда с первого
 // шага; переходы между экранами проигрывание не прерывают — остановить его
 // можно только этой кнопкой (или выключением питания). Во время экспорта
 // кнопка не действует: экспорт сам остановил проигрывание и занимает процессор.
 void handlePlayStopButton(const InputEvent& ev) {
-  if (ev.type != InputEventType::ControlChange || ev.number != DEVICE_CC_PLAY_STOP) return;
   if (ev.value == 0) return;
   if (!onHome()) return;
   if (exportRunning()) {
@@ -453,7 +453,7 @@ void handlePlayStopButton(const InputEvent& ev) {
 // у абсолютной крутилки есть упор в 0 и 127.
 bool knobDelta(const InputEvent& ev, uint8_t& knob, int16_t& delta) {
   if (ev.channel != MPK_CHANNEL_KNOBS || ev.number < MPK_KNOB_CC_BASE ||
-      ev.number >= MPK_KNOB_CC_BASE + WokwiInputSource::kNumKnobs) {
+      ev.number >= MPK_KNOB_CC_BASE + MPK_KNOB_COUNT) {
     return false;
   }
   knob = ev.number - MPK_KNOB_CC_BASE;
@@ -507,13 +507,16 @@ void handleKnob(const InputEvent& ev) {
 // ---------------------------------------------------------------------------
 // Клавиши.
 
-// Нижние клавиши C3..D#3 (B.4) проигрывают ваншот канала 1–4 через ту же
-// мастер-шину — прослушать звук, не запуская паттерн. На странице
-// секвенсора клавиша ещё и переводит курсор на этот канал, на микшере —
-// выбирает его полосу.
+// Нижние клавиши C3..D#3 — по одной на канал секвенсора.
+bool isChannelKey(const InputEvent& ev) {
+  return ev.channel == MPK_CHANNEL_KEYS && ev.number >= MPK_KEY_LOWEST &&
+         ev.number < MPK_KEY_LOWEST + StepSequencer::kTracks;
+}
+
+// Клавиша канала проигрывает его ваншот через ту же мастер-шину —
+// прослушать звук, не запуская паттерн. На странице секвенсора клавиша ещё
+// и переводит курсор на этот канал, на микшере — выбирает его полосу.
 void handleChannelKey(const InputEvent& ev) {
-  if (ev.type != InputEventType::NoteOn || ev.channel != MPK_CHANNEL_KEYS) return;
-  if (ev.number < MPK_KEY_LOWEST || ev.number >= MPK_KEY_LOWEST + StepSequencer::kTracks) return;
   if (!onHome()) return;
 
   const uint8_t track = ev.number - MPK_KEY_LOWEST;
@@ -554,7 +557,7 @@ void openSection(uint8_t section) {
 
 void navHome(NavCommand cmd) {
   // PAD6/PAD2 — курсор между верхней строкой (BPM, MET) и рядом разделов
-  // проекта 1–4; PAD1/PAD3 — влево/вправо внутри строки (B.4). PAD5
+  // проекта 1–4; PAD1/PAD3 — влево/вправо внутри строки. PAD5
   // нажимает элемент под курсором: MET — вкл/выкл метроном; раздел —
   // первое нажатие выбирает его, нажатие на уже выбранный открывает его
   // страницу. У BPM нажатия нет — темп крутится K1.
@@ -588,9 +591,9 @@ void navHome(NavCommand cmd) {
 }
 
 void cancelClearConfirm() {
-  if (clearConfirmTrack == 255) return;
-  clearConfirmTrack = 255;
-  if (uiMode == UiMode::Sequencer) ui.updateSequencerFooter(255);
+  if (clearConfirmTrack == StepSequencer::kNoTrack) return;
+  clearConfirmTrack = StepSequencer::kNoTrack;
+  if (uiMode == UiMode::Sequencer) ui.updateSequencerFooter(StepSequencer::kNoTrack);
 }
 
 void navSequencer(NavCommand cmd) {
@@ -628,7 +631,7 @@ void navSequencer(NavCommand cmd) {
       if (clearConfirmTrack == seqCursorTrack) {
         transport.clearTrack(seqCursorTrack);
         Serial.printf("seq: clear track %u\n", (unsigned)(seqCursorTrack + 1));
-        clearConfirmTrack = 255;
+        clearConfirmTrack = StepSequencer::kNoTrack;
         renderUiMode();
       } else {
         clearConfirmTrack = seqCursorTrack;
@@ -832,7 +835,7 @@ void navMenuItem(NavCommand cmd) {
 void handleNavCommand(NavCommand cmd) {
   if (cmd == NavCommand::None || !onHome()) return;
 
-  // PAD4 — метроном с любого экрана (B.4).
+  // PAD4 — метроном с любого экрана.
   if (cmd == NavCommand::ContextB) {
     setMetronomeEnabled(!metronomeOn);
     return;
@@ -967,7 +970,9 @@ void updateMeters() {
 }
 
 void updateClearConfirm(unsigned long now) {
-  if (clearConfirmTrack != 255 && now - clearConfirmAt >= CLEAR_CONFIRM_MS) cancelClearConfirm();
+  if (clearConfirmTrack != StepSequencer::kNoTrack && now - clearConfirmAt >= CLEAR_CONFIRM_MS) {
+    cancelClearConfirm();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -989,14 +994,33 @@ void logEvent(const InputEvent& ev) {
   }
 }
 
+// Куда уходит каждое событие ввода. Вся раскладка — здесь: кнопки
+// устройства, крутилки, клавиши каналов и пэды навигации.
 void handleInputEvent(const InputEvent& ev) {
-  handlePowerButton(ev);
-  handleModeButton(ev);
-  handlePlayStopButton(ev);
-  handleKnob(ev);
-  handleChannelKey(ev);
-  if (ev.type == InputEventType::NoteOn) {
-    handleNavCommand(navCommandForNoteOn(ev.channel, ev.number));
+  switch (ev.type) {
+    case InputEventType::ControlChange:
+      if (ev.number == DEVICE_CC_POWER) {
+        handlePowerButton(ev);
+      } else if (ev.number == DEVICE_CC_MODE) {
+        handleModeButton(ev);
+      } else if (ev.number == DEVICE_CC_PLAY_STOP) {
+        handlePlayStopButton(ev);
+      } else {
+        handleKnob(ev);  // абсолютный CC крутилки MPK
+      }
+      break;
+    case InputEventType::KnobTurn:
+      handleKnob(ev);
+      break;
+    case InputEventType::NoteOn:
+      if (isChannelKey(ev)) {
+        handleChannelKey(ev);
+      } else {
+        handleNavCommand(navCommandForNoteOn(ev.channel, ev.number));  // пэды банка A
+      }
+      break;
+    case InputEventType::NoteOff:
+      break;  // отпускание клавиш и пэдов пока ни на что не влияет
   }
   logEvent(ev);
 }
@@ -1020,8 +1044,8 @@ void setup() {
 
 void loop() {
   unsigned long now = millis();
-  if (now - lastBeat >= BEAT_INTERVAL_MS) {
-    lastBeat = now;
+  if (now - lastHeartbeatAt >= HEARTBEAT_LOG_INTERVAL_MS) {
+    lastHeartbeatAt = now;
     // audio=N — сколько сэмплов вывод выдал за секунду; должно быть ~16000,
     // иначе таймер звука работает не на той частоте.
     // edges=N — сколько раз за секунду переключался звуковой пин.

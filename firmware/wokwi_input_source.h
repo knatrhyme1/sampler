@@ -4,20 +4,20 @@
 // Раскладка пинов и порядок бит соответствуют firmware/diagram.json.
 //
 // Опрос идёт в отдельной задаче, а не в loop(): полная перерисовка экрана
-// держит loop() сотни миллисекунд, и нажатие, которое начиналось и
-// заканчивалось за это время, раньше терялось целиком
-// (docs/known-issues.md, п. 1). Задача с более высоким приоритетом
-// вытесняет loop() прямо посреди отрисовки, снимает состояние кнопок и
-// складывает события в очередь; loop() разбирает её, когда освободится.
+// держит loop() сотни миллисекунд, и короткое нажатие за это время
+// потерялось бы. Задача с более высоким приоритетом вытесняет loop() прямо
+// посреди отрисовки, снимает состояние кнопок и складывает события в
+// очередь; loop() разбирает её, когда освободится.
 #pragma once
 
 #include <Arduino.h>
 
 #include "input_source.h"
+#include "mpk_mapping.h"
 
 class WokwiInputSource : public InputSource {
  public:
-  static const uint8_t kNumKnobs = 8;
+  static const uint8_t kNumKnobs = MPK_KNOB_COUNT;
 
   void begin() override;
   bool poll(InputEvent& ev) override;

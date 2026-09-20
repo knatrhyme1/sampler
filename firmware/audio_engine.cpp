@@ -2,15 +2,29 @@
 
 #include <math.h>
 
+// Как читать числа в этом файле.
+//
+// Дробные величины здесь хранятся целыми числами, умноженными на степень
+// двойки (фиксированная точка) — целые процессор считает быстрее:
+//
+//   Q8  — число / 256.   Громкость: 256 = ×1,0, 128 = ×0,5.
+//   Q16 — число / 65536. Позиция и шаг внутри ваншота: 65536 = 1 сэмпл.
+//
+// Сдвиг вправо на N бит — деление на 2^N с округлением вниз, поэтому
+// (s * gainQ8) >> 8 читается как «s, умноженное на громкость».
+//
+// Сэмплы — int16 (-32768..32767), промежуточные суммы — int32. Пределы
+// подобраны так, чтобы int32 не переполнялся, — см. комментарии у формул.
+
 namespace {
 // Запас по уровню: 4 канала на полной громкости одновременно не должны
 // упираться в клиппинг мастера. ~-4 дБ на канал.
 constexpr uint16_t kChannelGainQ8 = 160;
-constexpr uint16_t kMetronomeGainQ8 = 256;
+constexpr uint16_t kMetronomeGainQ8 = AudioEngine::kUnityGainQ8;
 constexpr float kClickFreqHz = 1800.0f;
 constexpr float kAccentClickFreqHz = 2400.0f;  // первая доля такта
 constexpr float kClickAmplitude = 0.35f;
-constexpr uint32_t kUnityStepQ16 = 1UL << 16;
+constexpr uint32_t kUnityStepQ16 = 65536;  // шаг 1 сэмпл за сэмпл: частоты совпадают
 }  // namespace
 
 void AudioEngine::begin(uint32_t outputRate) {
@@ -44,7 +58,9 @@ void AudioEngine::postTrigger(uint8_t index, const int16_t* data, uint32_t lengt
 
 void AudioEngine::trigger(uint8_t channel, const OneShot& sample) {
   if (channel >= kChannelVoices) return;
-  const uint32_t stepQ16 = (uint32_t)(((uint64_t)sample.sampleRate << 16) / outputRate_);
+  // Ваншот 44,1 кГц на выводе 16 кГц: за выходной сэмпл проходим 2,76
+  // сэмпла ваншота.
+  const uint32_t stepQ16 = (uint32_t)((uint64_t)sample.sampleRate * kUnityStepQ16 / outputRate_);
   postTrigger(channel, sample.data, sample.length, stepQ16);
 }
 
@@ -61,7 +77,7 @@ void AudioEngine::applyMixer(const MixerSettings& mix) {
   uint16_t gains[kVoices];
   for (uint8_t i = 0; i < kChannelVoices; i++) gains[i] = scaled(i, kChannelGainQ8);
   gains[kMetronomeVoice] = scaled(MixerSettings::kMetronomeStrip, kMetronomeGainQ8);
-  const uint16_t master = scaled(MixerSettings::kMasterStrip, 256);
+  const uint16_t master = scaled(MixerSettings::kMasterStrip, kUnityGainQ8);
 
   portENTER_CRITICAL(&mux_);
   for (uint8_t i = 0; i < kVoices; i++) voiceGainQ8_[i] = gains[i];
@@ -151,16 +167,21 @@ void AudioEngine::renderBlock(int16_t* out, uint16_t n) {
     int32_t vpeak = 0;
 
     for (uint16_t k = 0; k < n; k++) {
+      // Точка чтения лежит между сэмплами pos и pos + 1, на доле frac
+      // пути. Берём оба и смешиваем пропорционально (линейная
+      // интерполяция): s + (next - s) * доля.
       int32_t s = data[pos];
-      // Линейная интерполяция к следующему сэмплу. frac сдвинут до 15 бит,
-      // чтобы произведение гарантированно влезало в int32.
       const int32_t next = (pos + 1 < length) ? data[pos + 1] : 0;
+      // Долю берём с точностью 15 бит, а не 16: |next - s| <= 65535, и
+      // 65535 * 32767 < 2^31 — произведение влезает в int32.
       s += ((next - s) * (int32_t)(frac >> 1)) >> 15;
-      const int32_t g = (s * gainQ8) >> 8;
+      const int32_t g = (s * gainQ8) >> 8;  // громкость голоса (Q8)
       acc[k] += g;
       const int32_t mag = g < 0 ? -g : g;
       if (mag > vpeak) vpeak = mag;
 
+      // Шаг вперёд: целые сэмплы из дроби переходят в pos, в frac
+      // остаётся дробная часть (младшие 16 бит).
       frac += stepQ16;
       pos += frac >> 16;
       frac &= 0xFFFF;
@@ -176,8 +197,8 @@ void AudioEngine::renderBlock(int16_t* out, uint16_t n) {
     voicePeaks[i] = (uint16_t)min(vpeak, (int32_t)32767);
   }
 
-  // Мастер-шина: общий гейн и жёсткий лимит на границах int16. Мягкий
-  // лимитер — отдельная стори (эффекты мастера).
+  // Мастер-шина: общая громкость (Q8) и жёсткое ограничение по границам
+  // int16. Мягкого лимитера пока нет.
   uint16_t peak = 0;
   for (uint16_t k = 0; k < n; k++) {
     int32_t mix = (acc[k] * blockMasterQ8_) >> 8;
