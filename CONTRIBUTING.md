@@ -35,6 +35,12 @@ python tools/audio_bitexact_test.py
 python tools/transport_timing_test.py
 ```
 
+Самотест прошивки (настоящий C++ движка и транспорта, прогоняется в Wokwi):
+
+```bash
+python tools/firmware_selftest.py --compile
+```
+
 Дымовой тест на ПК:
 
 ```bash
@@ -42,7 +48,7 @@ cd sound-engine
 make test
 ```
 
-Проверка в Wokwi описана в `docs/verification.md`.
+Проверка в Wokwi описана в `docs/verification.md`. Там же — план сплошной проверки функционала и отчёт последнего прогона.
 
 Изменение не считается проверенным на железе, пока его не прогнали на настоящей целевой плате.
 
