@@ -83,6 +83,14 @@ python tools/transport_timing_test.py
 
 Тесты идут на ПК и не требуют ESP32.
 
+Самотест прошивки проверяет уже настоящий C++ движка и транспорта — скетч собирается из исходников и прогоняется в Wokwi:
+
+```bash
+python tools/firmware_selftest.py --compile
+```
+
+Что именно доказывает каждая среда — в [`docs/verification.md`](docs/verification.md).
+
 ### Дымовой тест на ПК
 
 ```bash
