@@ -6,619 +6,731 @@
     {
       "type": "board-esp32-s3-devkitc-1",
       "id": "esp",
-      "top": 520,
-      "left": 0,
+      "top": 430,
+      "left": 300,
       "attrs": { "flashSize": "16", "psramSize": "8", "psramType": "octal" }
     },
     {
       "type": "wokwi-ili9341",
       "id": "lcd1",
-      "top": -300,
-      "left": 520,
+      "top": 150,
+      "left": 430,
       "rotate": 90,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "enc1",
-      "top": -140,
-      "left": 960,
+      "top": -330,
+      "left": 480,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "enc2",
-      "top": -140,
-      "left": 1060,
+      "top": -330,
+      "left": 580,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "enc3",
-      "top": -140,
-      "left": 1160,
+      "top": -330,
+      "left": 680,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "enc4",
-      "top": -140,
-      "left": 1260,
+      "top": -330,
+      "left": 780,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "enc5",
-      "top": -20,
-      "left": 960,
+      "top": -210,
+      "left": 480,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "enc6",
-      "top": -20,
-      "left": 1060,
+      "top": -210,
+      "left": 580,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "enc7",
-      "top": -20,
-      "left": 1160,
+      "top": -210,
+      "left": 680,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "enc8",
-      "top": -20,
-      "left": 1260,
+      "top": -210,
+      "left": 780,
       "attrs": {}
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad1",
-      "top": -50,
+      "top": -230,
       "left": 0,
       "attrs": { "color": "#cc3333", "label": "PAD1" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad2",
-      "top": -50,
+      "top": -230,
       "left": 80,
       "attrs": { "color": "#cc3333", "label": "PAD2" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad3",
-      "top": -50,
+      "top": -230,
       "left": 160,
       "attrs": { "color": "#cc3333", "label": "PAD3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad4",
-      "top": -50,
+      "top": -230,
       "left": 240,
       "attrs": { "color": "#cc3333", "label": "PAD4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad5",
-      "top": -140,
+      "top": -320,
       "left": 0,
       "attrs": { "color": "#cc3333", "label": "PAD5" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad6",
-      "top": -140,
+      "top": -320,
       "left": 80,
       "attrs": { "color": "#cc3333", "label": "PAD6" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad7",
-      "top": -140,
+      "top": -320,
       "left": 160,
       "attrs": { "color": "#cc3333", "label": "PAD7" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "pad8",
-      "top": -140,
+      "top": -320,
       "left": 240,
       "attrs": { "color": "#cc3333", "label": "PAD8" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btn_play",
-      "top": -260,
+      "top": 530,
       "left": 0,
       "attrs": { "color": "green", "label": "PLAY/STOP" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btn_mode",
-      "top": -260,
-      "left": 90,
+      "top": 620,
+      "left": 0,
       "attrs": { "color": "blue", "label": "MODE" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btn_power",
-      "top": -260,
-      "left": 180,
+      "top": 440,
+      "left": 0,
       "attrs": { "color": "red", "label": "POWER" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key1",
-      "top": 260,
+      "top": -60,
       "left": 0,
       "attrs": { "color": "#f5f5f5", "label": "C3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key2",
-      "top": 260,
+      "top": -60,
       "left": 42,
       "attrs": { "color": "#111111", "label": "C#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key3",
-      "top": 260,
+      "top": -60,
       "left": 84,
       "attrs": { "color": "#f5f5f5", "label": "D3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key4",
-      "top": 260,
+      "top": -60,
       "left": 126,
       "attrs": { "color": "#111111", "label": "D#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key5",
-      "top": 260,
+      "top": -60,
       "left": 168,
       "attrs": { "color": "#f5f5f5", "label": "E3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key6",
-      "top": 260,
+      "top": -60,
       "left": 210,
       "attrs": { "color": "#f5f5f5", "label": "F3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key7",
-      "top": 260,
+      "top": -60,
       "left": 252,
       "attrs": { "color": "#111111", "label": "F#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key8",
-      "top": 260,
+      "top": -60,
       "left": 294,
       "attrs": { "color": "#f5f5f5", "label": "G3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key9",
-      "top": 260,
+      "top": -60,
       "left": 336,
       "attrs": { "color": "#111111", "label": "G#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key10",
-      "top": 260,
+      "top": -60,
       "left": 378,
       "attrs": { "color": "#f5f5f5", "label": "A3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key11",
-      "top": 260,
+      "top": -60,
       "left": 420,
       "attrs": { "color": "#111111", "label": "A#3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key12",
-      "top": 260,
+      "top": -60,
       "left": 462,
       "attrs": { "color": "#f5f5f5", "label": "B3" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key13",
-      "top": 260,
+      "top": -60,
       "left": 504,
       "attrs": { "color": "#f5f5f5", "label": "C4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key14",
-      "top": 260,
+      "top": -60,
       "left": 546,
       "attrs": { "color": "#111111", "label": "C#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key15",
-      "top": 260,
+      "top": -60,
       "left": 588,
       "attrs": { "color": "#f5f5f5", "label": "D4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key16",
-      "top": 260,
+      "top": -60,
       "left": 630,
       "attrs": { "color": "#111111", "label": "D#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key17",
-      "top": 260,
+      "top": -60,
       "left": 672,
       "attrs": { "color": "#f5f5f5", "label": "E4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key18",
-      "top": 260,
+      "top": -60,
       "left": 714,
       "attrs": { "color": "#f5f5f5", "label": "F4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key19",
-      "top": 260,
+      "top": -60,
       "left": 756,
       "attrs": { "color": "#111111", "label": "F#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key20",
-      "top": 260,
+      "top": -60,
       "left": 798,
       "attrs": { "color": "#f5f5f5", "label": "G4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key21",
-      "top": 260,
+      "top": -60,
       "left": 840,
       "attrs": { "color": "#111111", "label": "G#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key22",
-      "top": 260,
+      "top": -60,
       "left": 882,
       "attrs": { "color": "#f5f5f5", "label": "A4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key23",
-      "top": 260,
+      "top": -60,
       "left": 924,
       "attrs": { "color": "#111111", "label": "A#4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key24",
-      "top": 260,
+      "top": -60,
       "left": 966,
       "attrs": { "color": "#f5f5f5", "label": "B4" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "key25",
-      "top": 260,
+      "top": -60,
       "left": 1008,
       "attrs": { "color": "#f5f5f5", "label": "C5" }
     },
     {
       "type": "wokwi-74hc165",
       "id": "sr1",
-      "top": 520,
-      "left": 250,
+      "top": 760,
+      "left": 0,
       "attrs": {}
     },
     {
       "type": "wokwi-74hc165",
       "id": "sr2",
-      "top": 520,
-      "left": 360,
+      "top": 760,
+      "left": 110,
       "attrs": {}
     },
     {
       "type": "wokwi-74hc165",
       "id": "sr3",
-      "top": 520,
-      "left": 470,
+      "top": 760,
+      "left": 220,
       "attrs": {}
     },
     {
       "type": "wokwi-74hc165",
       "id": "sr4",
-      "top": 520,
-      "left": 580,
+      "top": 760,
+      "left": 330,
       "attrs": {}
     },
     {
       "type": "wokwi-74hc165",
       "id": "sr5",
-      "top": 520,
-      "left": 690,
+      "top": 760,
+      "left": 440,
       "attrs": {}
     },
     {
       "type": "wokwi-resistor",
       "id": "r1",
-      "top": 650,
-      "left": 250,
+      "top": 880,
+      "left": 0,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r2",
-      "top": 650,
-      "left": 295,
+      "top": 880,
+      "left": 45,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r3",
-      "top": 650,
-      "left": 340,
+      "top": 880,
+      "left": 90,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r4",
-      "top": 650,
-      "left": 385,
+      "top": 880,
+      "left": 135,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r5",
-      "top": 650,
-      "left": 430,
+      "top": 880,
+      "left": 180,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r6",
-      "top": 650,
-      "left": 475,
+      "top": 880,
+      "left": 225,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r7",
-      "top": 650,
-      "left": 520,
+      "top": 880,
+      "left": 270,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r8",
-      "top": 650,
-      "left": 565,
+      "top": 880,
+      "left": 315,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r9",
-      "top": 650,
-      "left": 610,
+      "top": 880,
+      "left": 360,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r10",
-      "top": 650,
-      "left": 655,
+      "top": 880,
+      "left": 405,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r11",
-      "top": 690,
-      "left": 250,
+      "top": 880,
+      "left": 450,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r12",
-      "top": 690,
-      "left": 295,
+      "top": 880,
+      "left": 495,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r13",
-      "top": 690,
-      "left": 340,
+      "top": 940,
+      "left": 0,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r14",
-      "top": 690,
-      "left": 385,
+      "top": 940,
+      "left": 45,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r15",
-      "top": 690,
-      "left": 430,
+      "top": 940,
+      "left": 90,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r16",
-      "top": 690,
-      "left": 475,
+      "top": 940,
+      "left": 135,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r17",
-      "top": 690,
-      "left": 520,
+      "top": 940,
+      "left": 180,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r18",
-      "top": 690,
-      "left": 565,
+      "top": 940,
+      "left": 225,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r19",
-      "top": 690,
-      "left": 610,
+      "top": 940,
+      "left": 270,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r20",
-      "top": 690,
-      "left": 655,
+      "top": 940,
+      "left": 315,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r21",
-      "top": 730,
-      "left": 250,
+      "top": 940,
+      "left": 360,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r22",
-      "top": 730,
-      "left": 295,
+      "top": 940,
+      "left": 405,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r23",
-      "top": 730,
-      "left": 340,
+      "top": 940,
+      "left": 450,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r24",
-      "top": 730,
-      "left": 385,
+      "top": 940,
+      "left": 495,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r25",
-      "top": 730,
-      "left": 430,
+      "top": 1000,
+      "left": 0,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r26",
-      "top": 730,
-      "left": 475,
+      "top": 1000,
+      "left": 45,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r27",
-      "top": 730,
-      "left": 520,
+      "top": 1000,
+      "left": 90,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r28",
-      "top": 730,
-      "left": 565,
+      "top": 1000,
+      "left": 135,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r29",
-      "top": 730,
-      "left": 610,
+      "top": 1000,
+      "left": 180,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r30",
-      "top": 730,
-      "left": 655,
+      "top": 1000,
+      "left": 225,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r31",
-      "top": 770,
-      "left": 250,
+      "top": 1000,
+      "left": 270,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r32",
-      "top": 770,
-      "left": 295,
+      "top": 1000,
+      "left": 315,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r33",
-      "top": 770,
-      "left": 340,
+      "top": 1000,
+      "left": 360,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r34",
-      "top": 770,
-      "left": 385,
+      "top": 1000,
+      "left": 405,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r35",
-      "top": 770,
-      "left": 430,
+      "top": 1000,
+      "left": 450,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-resistor",
       "id": "r36",
-      "top": 770,
-      "left": 475,
+      "top": 1000,
+      "left": 495,
       "attrs": { "value": "10000" }
     },
     {
       "type": "wokwi-buzzer",
       "id": "bz1",
-      "top": 420,
-      "left": -140,
+      "top": 450,
+      "left": 900,
       "attrs": { "mode": "accurate", "volume": "0.6" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t1",
+      "top": -500,
+      "left": 0,
+      "attrs": { "text": "SMPLR — стенд симуляции. Это не электрическая схема устройства.", "fontSize": "34", "color": "white" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t2",
+      "top": -460,
+      "left": 0,
+      "attrs": { "text": "Схема железа: docs/hardware/architecture.md", "fontSize": "22", "color": "silver" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t3",
+      "top": -410,
+      "left": 0,
+      "attrs": { "text": "ВНЕШНИЙ USB-MIDI КОНТРОЛЛЕР — ЗАГЛУШКА", "fontSize": "28", "color": "orange" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t4",
+      "top": -378,
+      "left": 0,
+      "attrs": { "text": "На железе это одно устройство: Akai MPK mini mk3 по USB. В Wokwi USB-MIDI нет,", "fontSize": "20", "color": "silver" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t5",
+      "top": -354,
+      "left": 0,
+      "attrs": { "text": "поэтому его ноты и CC подаются кнопками и энкодерами через сдвиговые регистры.", "fontSize": "20", "color": "silver" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t6",
+      "top": -360,
+      "left": 480,
+      "attrs": { "text": "Крутилки K1–K8 → CC 70–77", "fontSize": "22", "color": "orange" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t7",
+      "top": -262,
+      "left": 0,
+      "attrs": { "text": "Пэды PAD1–PAD8 → ноты канала 10", "fontSize": "22", "color": "orange" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t8",
+      "top": -92,
+      "left": 0,
+      "attrs": { "text": "Клавиатура C3–C5 → ноты канала 1", "fontSize": "22", "color": "orange" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t9",
+      "top": 60,
+      "left": 0,
+      "attrs": { "text": "SMPLR — своё железо устройства", "fontSize": "34", "color": "deepskyblue" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t10",
+      "top": 100,
+      "left": 0,
+      "attrs": { "text": "Помеченное как Provisional ещё не выбрано: см. docs/hardware/bom.md", "fontSize": "20", "color": "silver" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t11",
+      "top": 118,
+      "left": 430,
+      "attrs": { "text": "Дисплей ILI9341, SPI", "fontSize": "22", "color": "deepskyblue" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t12",
+      "top": 400,
+      "left": 0,
+      "attrs": { "text": "Кнопки корпуса (Provisional)", "fontSize": "22", "color": "deepskyblue" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t13",
+      "top": 400,
+      "left": 300,
+      "attrs": { "text": "ESP32-S3: 16 МБ флеш, 8 МБ octal-PSRAM", "fontSize": "22", "color": "deepskyblue" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t14",
+      "top": 388,
+      "left": 900,
+      "attrs": { "text": "Звуковой выход — заглушка", "fontSize": "22", "color": "orange" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t15",
+      "top": 412,
+      "left": 900,
+      "attrs": { "text": "1 бит на GPIO21; на железе I2S → WM8960", "fontSize": "20", "color": "silver" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "t16",
+      "top": 720,
+      "left": 0,
+      "attrs": { "text": "Опрос кнопок: 5 × 74HC165 с подтяжками — только симуляция", "fontSize": "22", "color": "orange" }
     }
   ],
   "connections": [

@@ -37,3 +37,6 @@ Thumbs.db
 
 # Git Credential Manager diagnostics
 gcm-diagnose.log
+
+# Локальные рабочие материалы: отчёты прогонов, логи, черновики
+local-notes/

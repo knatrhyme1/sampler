@@ -6,12 +6,13 @@ SMPLR — экспериментальный embedded/аудио-проект. �
 
 Читайте по порядку:
 
-1. [`README.md`](README.md) — текущее состояние и как запустить.
-2. [`docs/architecture.md`](docs/architecture.md) — кто чем владеет и как идёт выполнение.
-3. [`docs/known-issues.md`](docs/known-issues.md) — ограничения и доказательства.
-4. [`docs/verification.md`](docs/verification.md) — что может доказать каждая среда.
-5. [`docs/backlog.md`](docs/backlog.md) — активная работа.
-6. [`docs/roadmap.md`](docs/roadmap.md) — дальние планы.
+1. [`README.md`](README.md) — что это за проект и как его запустить.
+2. [`docs/product-status.md`](docs/product-status.md) — что доказано, а что нет.
+3. [`docs/architecture.md`](docs/architecture.md) — кто чем владеет и как идёт выполнение.
+4. [`docs/known-issues.md`](docs/known-issues.md) — ограничения и доказательства.
+5. [`docs/verification.md`](docs/verification.md) — что может доказать каждая среда.
+6. [`docs/project-rules.md`](docs/project-rules.md) — постоянные правила проекта.
+7. [`docs/backlog.md`](docs/backlog.md) — активная работа.
 
 Файлы в `docs/archive/` — исторические документы, а не текущие требования.
 
@@ -48,7 +49,7 @@ cd sound-engine
 make test
 ```
 
-Проверка в Wokwi описана в `docs/verification.md`. Там же — план сплошной проверки функционала и отчёт последнего прогона.
+Проверка в Wokwi описана в `docs/verification.md`, сплошная проверка функционала — в `docs/test-plan.md`. Протоколы прогонов в репозиторий не выкладываются: найденные проблемы идут в `docs/known-issues.md`, исправления — в `CHANGELOG.md`.
 
 Изменение не считается проверенным на железе, пока его не прогнали на настоящей целевой плате.
 
@@ -94,7 +95,7 @@ make test
 
 Не ведите дневник разработки в комментариях к коду. Комментарий объясняет неочевидный инвариант, аппаратное ограничение, владение или причину, которая всё ещё актуальна для кода.
 
-Историческим решениям место в журнале изменений или в архиве.
+Архитектурные решения фиксируются в [`docs/decision-log.md`](docs/decision-log.md), остальная история — в журнале изменений или в архиве.
 
 ## Разработка с ИИ
 
