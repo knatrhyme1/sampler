@@ -52,10 +52,10 @@ MASTER_GAIN = 256
 VOICES = 5
 CHANNEL_VOICES = 4
 MAX_BLOCK = 64
-# Сетка секвенсора (firmware/step_sequencer.h): 16 шагов четвертями = 4 такта,
-# экспорт проигрывает паттерн один раз (PatternExporter::kLoops).
+# Сетка секвенсора (firmware/step_sequencer.h): 16 шагов шестнадцатыми = один
+# такт, экспорт проигрывает паттерн один раз (PatternExporter::kLoops).
 STEPS = 16
-STEPS_PER_BEAT = 1
+STEPS_PER_BEAT = 4
 LOOPS = 1
 
 
@@ -71,7 +71,7 @@ def parse_sample(name):
     return vals
 
 
-KIT = [parse_sample(n) for n in ("kSampleKick", "kSampleSnare", "kSampleHat", "kSamplePerc")]
+KIT = [parse_sample(n) for n in ("kSampleKick", "kSampleClsdHat", "kSampleOpenHat", "kSampleCrash")]
 SAMPLES_RATE = int(re.search(r"kDefaultSamplesRate = (\d+);", SRC).group(1))
 
 

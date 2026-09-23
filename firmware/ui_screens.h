@@ -241,6 +241,8 @@ class UiScreens {
   void drawText(int16_t x, int16_t y, const char* text, uint8_t size, uint16_t fg, uint16_t bg);
   // То же, но сначала стирает полосу шириной w под строкой (для значений,
   // длина которых меняется).
+  void drawChannelName(int16_t x, int16_t boxW, int16_t centerY, const char* name,
+                       uint16_t color);
   void drawTextField(int16_t x, int16_t y, int16_t w, const char* text, uint8_t size, uint16_t fg,
                      uint16_t bg);
   void drawHomeBpm(uint16_t bpm, bool focused);
@@ -263,6 +265,7 @@ class UiScreens {
   void drawPianoGrid(const PianoRoll& roll, uint8_t cursorStep, uint8_t cursorPitch);
   void drawArrangementCell(uint8_t row, uint8_t bar, bool cursor, const StepSequencer& seq,
                            const PianoRoll& roll);
+  void drawArrangementRowName(uint8_t row, bool selected);
   void drawArrangementInfo(uint8_t cursorRow, uint8_t cursorBar);
   void drawHeader(const char* rightLabel, uint16_t rightColor);
   void drawBootFooter();

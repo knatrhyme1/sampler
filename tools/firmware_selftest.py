@@ -127,9 +127,9 @@ TEMPLATE = r"""// Сгенерировано tools/firmware_selftest.py — не
 
 static const OneShot kDefaultKit[StepSequencer::kTracks] = {
     {kSampleKick, kSampleKickLength, kDefaultSamplesRate},
-    {kSampleSnare, kSampleSnareLength, kDefaultSamplesRate},
-    {kSampleHat, kSampleHatLength, kDefaultSamplesRate},
-    {kSamplePerc, kSamplePercLength, kDefaultSamplesRate},
+    {kSampleClsdHat, kSampleClsdHatLength, kDefaultSamplesRate},
+    {kSampleOpenHat, kSampleOpenHatLength, kDefaultSamplesRate},
+    {kSampleCrash, kSampleCrashLength, kDefaultSamplesRate},
 };
 static const OneShot kAbruptKit[StepSequencer::kTracks] = {%(abrupt_kit)s};
 

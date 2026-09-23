@@ -72,14 +72,14 @@ PatternExporter exporter;
 MixerSettings mixer;
 PianoRoll pianoRoll;
 
-// Ваншоты по умолчанию для каналов KICK/SNARE/HAT/PERC (ACIDKICK DRUM KIT,
-// сконвертированы tools/wav_to_header.py в default_samples.h, 44,1 кГц —
+// Ваншоты по умолчанию для каналов KICK/CLSD HAT/OPEN HAT/CRASH
+// (сконвертированы tools/wav_to_header.py в default_samples.h, 44,1 кГц —
 // живой вывод пересчитывает их в свои 16 кГц, экспорт берёт как есть).
 const OneShot kDefaultOneShots[StepSequencer::kTracks] = {
     {kSampleKick, kSampleKickLength, kDefaultSamplesRate},
-    {kSampleSnare, kSampleSnareLength, kDefaultSamplesRate},
-    {kSampleHat, kSampleHatLength, kDefaultSamplesRate},
-    {kSamplePerc, kSamplePercLength, kDefaultSamplesRate},
+    {kSampleClsdHat, kSampleClsdHatLength, kDefaultSamplesRate},
+    {kSampleOpenHat, kSampleOpenHatLength, kDefaultSamplesRate},
+    {kSampleCrash, kSampleCrashLength, kDefaultSamplesRate},
 };
 
 unsigned long lastHeartbeatAt = 0;

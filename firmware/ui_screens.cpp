@@ -151,6 +151,26 @@ void UiScreens::drawText(int16_t x, int16_t y, const char* text, uint8_t size, u
   }
 }
 
+// Название канала по центру узкой колонки. «CLSD HAT» в одну строку занимает
+// 48 px и не влезает ни в колонку секвенсора (32 px), ни в полосу микшера
+// (46 px), поэтому имя из двух слов рисуется в две строки. centerY — середина
+// отведённого под имя места.
+void UiScreens::drawChannelName(int16_t x, int16_t boxW, int16_t centerY, const char* name,
+                                uint16_t color) {
+  const char* space = strchr(name, ' ');
+  if (space == nullptr) {
+    drawText(x + (boxW - (int16_t)strlen(name) * 6) / 2, centerY - 4, name, 1, color, kBg);
+    return;
+  }
+  char word[8];
+  size_t len = (size_t)(space - name);
+  if (len > sizeof(word) - 1) len = sizeof(word) - 1;
+  memcpy(word, name, len);
+  word[len] = '\0';
+  drawText(x + (boxW - (int16_t)len * 6) / 2, centerY - 8, word, 1, color, kBg);
+  drawText(x + (boxW - (int16_t)strlen(space + 1) * 6) / 2, centerY, space + 1, 1, color, kBg);
+}
+
 void UiScreens::drawTextField(int16_t x, int16_t y, int16_t w, const char* text, uint8_t size,
                               uint16_t fg, uint16_t bg) {
   tft_.fillRect(x, y, w, 8 * size, bg);
@@ -692,7 +712,9 @@ void UiScreens::showExport(const ExportView& v) {
   drawText(20, 56, "PATTERN -> WAV", 2, kCream, kBg);
 
   char info[48];
-  snprintf(info, sizeof(info), "4 BARS  %u BPM  44.1 KHZ  MONO", (unsigned)v.bpm);
+  const unsigned bars = StepSequencer::kSteps / StepSequencer::kStepsPerBar;
+  snprintf(info, sizeof(info), "%u BAR%s  %u BPM  44.1 KHZ  MONO", bars, bars == 1 ? "" : "S",
+           (unsigned)v.bpm);
   drawText(20, 82, info, 1, kHint, kBg);
   snprintf(info, sizeof(info), "%u.%u SEC  %u KB  MIXER LEVELS APPLY", (unsigned)(v.durationMs / 1000),
            (unsigned)(v.durationMs % 1000 / 100), (unsigned)((v.fileBytes + 1023) / 1024));
@@ -764,16 +786,17 @@ void UiScreens::updateExportProgress(uint8_t percent) {
 //
 //  y=0   STEP SEQ          > PLAY   MET         120 BPM
 //  y=40  ─────────────────────────────────────────────────
-//  y=48      1         2         3         4             номера тактов
+//  y=48      1         2         3         4             номера долей
 //  y=60      ▀                                           маркер бегущего шага
 //  y=70  KICK □■□□ □□□□ ■□□□ □□□□                        4 канала x 16 шагов
 //  ...
 //  y=204 ─────────────────────────────────────────────────
 //  y=211 подсказка по управлению, две строки
 //
-// Шаг — четверть, 4 шага на такт, 4 такта. Ячейка 11x24 с шагом 15px, между
-// тактами лишние 5px. Курсор — двойная рамка в 2px вокруг ячейки, влезает в
-// зазор между ячейками, поэтому перерисовка одной ячейки не задевает соседние.
+// Шаг — шестнадцатая, 4 шага на долю, 4 доли в такте. Ячейка 11x24 с шагом
+// 15px, между долями лишние 5px. Курсор — двойная рамка в 2px вокруг ячейки,
+// влезает в зазор между ячейками, поэтому перерисовка одной ячейки не
+// задевает соседние.
 namespace {
 constexpr int16_t kSeqHeaderLineY = 40;
 constexpr int16_t kSeqBarLabelY = 48;
@@ -789,11 +812,11 @@ constexpr int16_t kSeqBarGap = 5;
 constexpr int16_t kSeqTransportX = 136;
 constexpr int16_t kSeqMetX = 200;
 
-constexpr const char* kSeqTrackNames[StepSequencer::kTracks] = {"KICK", "SNARE", "HAT",
-                                                                 "PERC"};
+constexpr const char* kSeqTrackNames[StepSequencer::kTracks] = {"KICK", "CLSD HAT", "OPEN HAT",
+                                                                 "CRASH"};
 
 int16_t seqStepX(uint8_t step) {
-  return kSeqGridX + step * kSeqStepPitch + (step / StepSequencer::kStepsPerBar) * kSeqBarGap;
+  return kSeqGridX + step * kSeqStepPitch + (step / StepSequencer::kStepsPerBeat) * kSeqBarGap;
 }
 
 int16_t seqTrackY(uint8_t track) { return kSeqGridY + track * kSeqRowPitch; }
@@ -813,9 +836,9 @@ void UiScreens::drawSequencerCell(const StepSequencer& seq, uint8_t track, uint8
   } else if (playhead) {
     tft_.fillRect(x, y, kSeqCellW, kSeqCellH, kDim);
   } else {
-    // Первая доля такта у пустых ячеек чуть заметнее — сетка читается
-    // тактами, как в Channel Rack.
-    if (step % StepSequencer::kStepsPerBar == 0) {
+    // Первый шаг доли у пустых ячеек чуть заметнее — сетка читается
+    // долями, как в Channel Rack.
+    if (step % StepSequencer::kStepsPerBeat == 0) {
       tft_.fillRect(x + 1, y + 1, kSeqCellW - 2, kSeqCellH - 2, kGlitchDim);
     }
     tft_.drawRect(x, y, kSeqCellW, kSeqCellH, kDim);
@@ -830,7 +853,8 @@ void UiScreens::drawSequencerCell(const StepSequencer& seq, uint8_t track, uint8
 void UiScreens::drawSequencerLabel(uint8_t track, bool selected) {
   const int16_t y = seqTrackY(track);
   tft_.fillRect(16, y, kSeqGridX - 18, kSeqCellH, kBg);
-  drawText(16, y + 8, kSeqTrackNames[track], 1, selected ? kCream : kHint, kBg);
+  drawChannelName(16, kSeqGridX - 18, y + kSeqCellH / 2, kSeqTrackNames[track],
+                  selected ? kCream : kHint);
 }
 
 void UiScreens::drawSequencerPlayheadColumn(const StepSequencer& seq, uint8_t step, bool lit,
@@ -857,9 +881,9 @@ void UiScreens::showSequencer(const StepSequencer& seq, bool playing, uint8_t pl
   tft_.drawFastHLine(12, kSeqHeaderLineY, kScreenW - 24, kDim);
   updateSequencerHeader(playing, bpm, metronomeOn);
 
-  for (uint8_t bar = 0; bar < StepSequencer::kSteps / StepSequencer::kStepsPerBar; bar++) {
-    const char label[2] = {(char)('1' + bar), '\0'};
-    drawText(seqStepX(bar * StepSequencer::kStepsPerBar) + 3, kSeqBarLabelY, label, 1, kHint,
+  for (uint8_t beat = 0; beat < StepSequencer::kSteps / StepSequencer::kStepsPerBeat; beat++) {
+    const char label[2] = {(char)('1' + beat), '\0'};
+    drawText(seqStepX(beat * StepSequencer::kStepsPerBeat) + 3, kSeqBarLabelY, label, 1, kHint,
              kBg);
   }
 
